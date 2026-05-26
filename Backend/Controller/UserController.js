@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 
 export const registerUser = async(req,res)=>{
     try{
-        // 1. Destructure OName (Capital N)
+        // 1. Destructure OName 
         const { OName, LName, city, seats, email, password } = req.body;
 
         // 2. Validate OName

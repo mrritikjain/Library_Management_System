@@ -1,9 +1,11 @@
 import { useForm } from "react-hook-form";
+import { Link } from "react-router-dom";
 import axios from "axios";
 const Register = () => {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm();
 
@@ -19,7 +21,18 @@ const Register = () => {
       }
     } catch (error) {
       console.log(error);
+      // 3. Catch the backend error message (e.g. "User already exists")
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        alert(error.response.data.message);
+      } else {
+        alert("Registration failed. Please check if your server is running.");
+      }
     }
+    reset();
   };
 
   return (
@@ -227,9 +240,12 @@ const Register = () => {
 
         <div className="mt-6 text-center text-sm text-slate-400">
           Already registered?{" "}
-          <button className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors cursor-pointer bg-transparent border-none">
+          <Link
+            to="/"
+            className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+          >
             Login here
-          </button>
+          </Link>
         </div>
       </div>
     </div>
