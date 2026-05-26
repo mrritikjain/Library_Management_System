@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-
+import axios from "axios";
 const Register = () => {
   const {
     register,
@@ -7,8 +7,19 @@ const Register = () => {
     formState: { errors },
   } = useForm();
 
-  const submitCall = (data) => {
+  const submitCall = async (data) => {
     console.log("Form Data Submitted:", data);
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/register",
+        data,
+      );
+      if (response.status === 201) {
+        alert("User registered successfully");
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
