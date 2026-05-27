@@ -36,6 +36,17 @@ Express is a lightweight **web application framework** built on top of Node.js. 
 *   **Dotenv's Job:** Calling `require("dotenv").config()` reads the physical `.env` file and merges those key-value pairs into the global `process.env` object.
 *   **The Trap:** If you import a module that connects to the database (e.g. `mongoose.connect(process.env.MONGO_URI)`) *before* calling `dotenv.config()`, `process.env.MONGO_URI` will be `undefined`, causing the server to crash immediately. Hence, `dotenv.config()` must be the very first line executed in your server's entry point (`index.js`).
 
+### CommonJS (`require`) vs. ES Modules (`import/export`)
+*   **CommonJS (CJS):** 
+    *   The traditional Node.js module system. Uses `require()` and `module.exports`.
+    *   Modules are loaded **synchronously** (one after another).
+    *   File extensions are optional (e.g. `require('./db')`).
+*   **ES Modules (ESM):**
+    *   The modern, standardized JavaScript module system. Activated in Node.js by setting `"type": "module"` in `package.json`.
+    *   Uses `import` and `export default` / `export const` syntax.
+    *   Modules can be parsed **asynchronously**, leading to better startup performance.
+    *   **ESM Rule:** You *must* specify file extensions for local relative imports (e.g., `import connectDB from "./db.js"`). If you omit `.js`, Node will throw a `module not found` error.
+
 ---
 
 ## 3. MongoDB & Mongoose (Database Layer)
@@ -152,3 +163,16 @@ This tells the browser that requests from the React app are safe and should not 
 To secure pages like `/dashboard`, we create a wrapper component `ProtectedRoute`. It checks the `AuthContext` to see if a token exists:
 *   If **yes**, it renders the dashboard.
 *   If **no**, it redirects the user to the login page (`/`). This prevents unauthenticated users from seeing pages they shouldn't access.
+
+---
+
+## 10. Common Full-Stack Integration Bugs (For Interview & Debugging)
+
+### Destructuring and Import mismatch (CommonJS Trap)
+*   **The Bug:** Writing `const { default: connectDB } = require("./db.js")` when the file exported `module.exports = connectDB;`.
+*   **Why it fails:** Destructuring `{ default }` is only needed when importing ES Modules that were converted to CommonJS by a compiler (like Babel/Webpack). For normal Node.js CommonJS files, `require()` directly returns the exported value. Destructuring it will result in `undefined`, leading to runtime crashes like `connectDB is not a function`.
+
+### Casing Mismatches across the Stack
+*   **The Bug:** Using `"OName"` on the frontend form, destructuring `Oname` (lowercase `n`) on the backend controller, and saving to `Oname` in the schema.
+*   **Why it fails:** JavaScript is strictly **case-sensitive**. When the frontend sends `OName`, `req.body.Oname` is `undefined`. Accessing properties or calling methods (like `.trim()`) on it causes a fatal runtime crash (`TypeError: Cannot read properties of undefined (reading 'trim')`), throwing a generic `500 Internal Server Error` to the client.
+*   **Best Practice:** Always define and document a strict casing standard (usually `camelCase` e.g., `ownerName`, `libraryName`) across your database schemas, server endpoints, and frontend forms.

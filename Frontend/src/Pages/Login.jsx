@@ -1,16 +1,38 @@
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Login = () => {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm();
 
   const submitCall = async (data) => {
     console.log("Login Data Submitted:", data);
-    // We will connect this to the Backend login API in the next step!
+    try {
+      const res = await axios.post("http://localhost:5000/api/login", data, {
+        withCredentials: true,
+      });
+      if (res.status === 200) {
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      console.log(error);
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        alert(error.response.data.message);
+      } else {
+        alert("Login failed. Please check if your server is running.");
+      }
+    }
+    reset();
   };
 
   return (
@@ -22,7 +44,7 @@ const Login = () => {
       {/* Login Card */}
       <div className="w-full max-w-md bg-slate-900/40 backdrop-blur-xl border border-slate-800/85 rounded-2xl p-8 shadow-2xl relative z-10 transition-all duration-300 hover:border-indigo-500/20">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-400 via-violet-400 to-pink-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-extrabold tracking-tight bg-linear-to-r from-indigo-400 via-violet-400 to-pink-400 bg-clip-text text-transparent">
             Welcome Back
           </h1>
           <p className="text-slate-400 text-sm mt-2">
@@ -86,7 +108,7 @@ const Login = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full mt-2 cursor-pointer bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white py-3 rounded-lg font-semibold text-sm transition-all duration-200 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-lg shadow-indigo-500/20"
+            className="w-full mt-2 cursor-pointer bg-linear-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white py-3 rounded-lg font-semibold text-sm transition-all duration-200 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-lg shadow-indigo-500/20"
           >
             Log In
           </button>
