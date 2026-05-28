@@ -17,10 +17,9 @@ const Register = () => {
       const response = await axios.post(
         "http://localhost:5000/api/register",
         data,
+        { withCredentials: true },
       );
       if (response.status === 201) {
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
         navigate("/dashboard");
       }
     } catch (error) {

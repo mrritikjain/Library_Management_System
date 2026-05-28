@@ -50,6 +50,13 @@ export const registerUser = async(req,res)=>{
         // 4. Generate token to auto-login upon registration
         const token = jwt.sign({userID:user._id}, process.env.JWT_SECRET, {expiresIn:"1d"});
 
+        res.cookie("token", token,{
+            httpOnly:true,
+            secure:false,
+            sameSite:"Lax",
+            maxAge:24*60*60*1000
+        });
+
         return res.status(201).json({ 
             message: "User registered successfully", 
             token,
@@ -98,3 +105,38 @@ export const loginUser = async(req, res)=>{
         res.status(500).json({ message: "Internal Server Error" });
     }
 }
+export const userDetails = async(req,res)=>{
+    try {
+        const token = req.cookies.token;
+        if(!token){
+          return  res.status(401).json({message: "token is missing"});
+        }
+         const decode = jwt.verify(token, process.env.JWT_SECRET);
+         const user = await User.findOne({_id:decode.userID});
+         if(!user){
+          return  res.status(404).json({message :"user not found"})
+         }
+         res.status(200).json(user);
+        
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+}
+
+export const logoutUser = async(req, res)=>{
+    try {
+         res.cookie("token", "",{
+    httpOnly:true,
+    secure:false,
+    sameSite:"Lax",
+    expires : new Date(0),
+   });
+   res.status(200).json({message: "Logout successfully."})
+        
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+}
+
