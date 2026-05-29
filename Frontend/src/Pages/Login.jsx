@@ -12,7 +12,6 @@ const Login = () => {
   } = useForm();
 
   const submitCall = async (data) => {
-    console.log("Login Data Submitted:", data);
     try {
       const res = await axios.post("http://localhost:5000/api/login", data, {
         withCredentials: true,

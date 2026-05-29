@@ -1,0 +1,88 @@
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faChair,
+  faCoins,
+  faWallet,
+  faChartLine,
+} from "@fortawesome/free-solid-svg-icons";
+
+const Statics = ({ user }) => {
+  // Seating capacity calculation
+  const totalSeats = user?.seats || 50;
+  const occupiedSeats = 18; // Simulated occupied seats
+  const availableSeats = totalSeats - occupiedSeats;
+
+  // Financial simulation
+  const feesCollected = 38400;
+  const expenses = 12800;
+  const profit = feesCollected - expenses;
+
+  const staticsData = [
+    {
+      icon: faChair,
+      title: "Available Seats",
+      value: `${availableSeats} / ${totalSeats}`,
+      themeClass: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+      subtext: "Desk slots active",
+    },
+    {
+      icon: faCoins,
+      title: "Fees Collected",
+      value: `₹ ${feesCollected.toLocaleString()}`,
+      themeClass: "bg-indigo-500/10 border-indigo-500/20 text-indigo-400",
+      subtext: "Gross revenue",
+    },
+    {
+      icon: faWallet,
+      title: "Total Expenses",
+      value: `₹ ${expenses.toLocaleString()}`,
+      themeClass: "bg-rose-500/10 border-rose-500/20 text-rose-400",
+      subtext: "Rent & utilities",
+    },
+    {
+      icon: faChartLine,
+      title: "Net Profit",
+      value: `₹ ${profit.toLocaleString()}`,
+      themeClass: "bg-violet-500/10 border-violet-500/20 text-violet-400",
+      subtext: `Margin: ${((profit / feesCollected) * 100).toFixed(1)}%`,
+    },
+  ];
+
+  return (
+    <div className="w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 w-full">
+        {staticsData.map((stat, index) => {
+          return (
+            <div
+              key={index}
+              className="bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-xl p-5 hover:border-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/5 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+            >
+              <div className="flex items-center gap-4">
+                {/* Icon Wrapper */}
+                <div
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center border shrink-0 ${stat.themeClass}`}
+                >
+                  <FontAwesomeIcon icon={stat.icon} className="text-lg" />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider truncate">
+                    {stat.title}
+                  </p>
+                  <p className="mt-1 text-2xl font-black text-slate-100 tracking-tight truncate">
+                    {stat.value}
+                  </p>
+                  <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+                    {stat.subtext}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+export default Statics;

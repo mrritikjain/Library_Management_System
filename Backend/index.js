@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import express from "express";
 import connectDB from "./Config/db.js";
 import UserRoute from "./routes/UserRoute.js";
+import SeatRoute from "./routes/seatRoute.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 dotenv.config();
@@ -13,6 +14,7 @@ app.use(cors(
 ));
 app.use(cookieParser());
 app.use("/api",UserRoute);
+app.use("/api/seats",SeatRoute);
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, async () =>{
