@@ -14,28 +14,29 @@ export const getSeats = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userID = decoded.userID; // Now userID is defined!
 
-    // 4. Find seats matching the owner who created them
-    let seatsList = await seat.find({ createdBy: userID });
+    // 4. Find seats matching the owner who created them and populate student details
+    let seatsList = await seat.find({ createdBy: userID })
+      .populate("morning.studentId evening.studentId fullDay.studentId", "name email mobile plan");
 
-    // 5. If no seats exist in database for this new user, auto-initialize them matching their library capacity
-    if (seatsList.length === 0) {
-      const owner = await User.findById(userID);
-      if (owner && owner.seats > 0) {
-        const initialSeats = [];
-        for (let i = 1; i <= owner.seats; i++) {
-          initialSeats.push({
-            seatNumber: i,
-            createdBy: userID,
-            morning: { isOccupied: false, studentId: null },
-            evening: { isOccupied: false, studentId: null },
-            fullDay: { isOccupied: false, studentId: null },
-          });
-        }
-        await seat.insertMany(initialSeats);
-        
-        // Refetch the newly created documents
-        seatsList = await seat.find({ createdBy: userID });
+    // 5. Auto-initialize or expand seats matching user's library capacity if records are missing
+    const owner = await User.findById(userID);
+    if (owner && owner.seats > seatsList.length) {
+      const currentSeatDocsCount = seatsList.length;
+      const additionalSeats = [];
+      for (let i = currentSeatDocsCount + 1; i <= owner.seats; i++) {
+        additionalSeats.push({
+          seatNumber: i,
+          createdBy: userID,
+          morning: { isOccupied: false, studentId: null },
+          evening: { isOccupied: false, studentId: null },
+          fullDay: { isOccupied: false, studentId: null },
+        });
       }
+      await seat.insertMany(additionalSeats);
+      
+      // Refetch with populates
+      seatsList = await seat.find({ createdBy: userID })
+        .populate("morning.studentId evening.studentId fullDay.studentId", "name email mobile plan");
     }
 
     // Sort the seats list numerically by seat number

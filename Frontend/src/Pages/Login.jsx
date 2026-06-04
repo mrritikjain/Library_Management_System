@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -10,6 +11,15 @@ const Login = () => {
     reset,
     formState: { errors },
   } = useForm();
+
+  // Forgot password modal state
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
+  const [forgotData, setForgotData] = useState({
+    email: "",
+    city: "",
+    newPassword: "",
+  });
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   const submitCall = async (data) => {
     try {
@@ -32,6 +42,32 @@ const Login = () => {
       }
     }
     reset();
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!forgotData.email || !forgotData.city || !forgotData.newPassword) {
+      alert("All fields are required.");
+      return;
+    }
+    if (forgotData.newPassword.length < 7) {
+      alert("New password must be at least 7 characters long.");
+      return;
+    }
+
+    try {
+      setForgotLoading(true);
+      const res = await axios.post("http://localhost:5000/api/forgot-password", forgotData);
+      if (res.status === 200) {
+        alert("Password reset successfully. You can now log in with your new password.");
+        setIsForgotModalOpen(false);
+        setForgotData({ email: "", city: "", newPassword: "" });
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to reset password.");
+    } finally {
+      setForgotLoading(false);
+    }
   };
 
   return (
@@ -102,6 +138,17 @@ const Login = () => {
                 {errors.password.message}
               </span>
             )}
+
+            {/* Forgot Password Trigger */}
+            <div className="flex justify-end mt-2">
+              <button
+                type="button"
+                onClick={() => setIsForgotModalOpen(true)}
+                className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors cursor-pointer"
+              >
+                Forgot Password?
+              </button>
+            </div>
           </div>
 
           {/* Submit Button */}
@@ -123,6 +170,75 @@ const Login = () => {
           </Link>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      {isForgotModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-2xl">
+            <h3 className="text-xl font-bold mb-1.5 text-slate-200">Reset Account Password</h3>
+            <p className="text-xs text-slate-400 mb-5">
+              Verify your security credentials to reset your account password.
+            </p>
+
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Registered Email</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="owner@example.com"
+                  value={forgotData.email}
+                  onChange={(e) => setForgotData((prev) => ({ ...prev, email: e.target.value }))}
+                  className="w-full bg-slate-950/65 border border-slate-850 rounded-lg px-3.5 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">
+                  Security Answer: Library City
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. New York"
+                  value={forgotData.city}
+                  onChange={(e) => setForgotData((prev) => ({ ...prev, city: e.target.value }))}
+                  className="w-full bg-slate-950/65 border border-slate-850 rounded-lg px-3.5 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">New Password</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={forgotData.newPassword}
+                  onChange={(e) => setForgotData((prev) => ({ ...prev, newPassword: e.target.value }))}
+                  className="w-full bg-slate-950/65 border border-slate-850 rounded-lg px-3.5 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="flex gap-3 justify-end pt-4 border-t border-slate-850">
+                <button
+                  type="button"
+                  onClick={() => setIsForgotModalOpen(false)}
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  className="bg-indigo-500 hover:bg-indigo-400 text-white px-5 py-2 rounded-lg text-sm font-semibold cursor-pointer disabled:opacity-40"
+                >
+                  {forgotLoading ? "Resetting..." : "Reset Password"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

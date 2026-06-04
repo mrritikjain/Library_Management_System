@@ -6,16 +6,17 @@ import {
   faChartLine,
 } from "@fortawesome/free-solid-svg-icons";
 
-const Statics = ({ user }) => {
+const Statics = ({ stats }) => {
   // Seating capacity calculation
-  const totalSeats = user?.seats || 50;
-  const occupiedSeats = 18; // Simulated occupied seats
-  const availableSeats = totalSeats - occupiedSeats;
+  const totalSeats = stats?.totalSeats || 0;
+  const occupiedSeats = stats?.occupiedSeats || 0;
+  const availableSeats = stats?.availableSeats || 0;
 
-  // Financial simulation
-  const feesCollected = 38400;
-  const expenses = 12800;
-  const profit = feesCollected - expenses;
+  // Financial calculation
+  const feesCollected = stats?.feesCollected || 0;
+  const expenses = stats?.totalExpenses || 0;
+  const profit = stats?.netProfit || 0;
+  const margin = feesCollected > 0 ? ((profit / feesCollected) * 100).toFixed(1) : "0.0";
 
   const staticsData = [
     {
@@ -23,7 +24,7 @@ const Statics = ({ user }) => {
       title: "Available Seats",
       value: `${availableSeats} / ${totalSeats}`,
       themeClass: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
-      subtext: "Desk slots active",
+      subtext: `${occupiedSeats} slots booked`,
     },
     {
       icon: faCoins,
@@ -44,7 +45,7 @@ const Statics = ({ user }) => {
       title: "Net Profit",
       value: `₹ ${profit.toLocaleString()}`,
       themeClass: "bg-violet-500/10 border-violet-500/20 text-violet-400",
-      subtext: `Margin: ${((profit / feesCollected) * 100).toFixed(1)}%`,
+      subtext: `Margin: ${margin}%`,
     },
   ];
 
