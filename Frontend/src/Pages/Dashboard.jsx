@@ -66,7 +66,7 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex w-full relative overflow-hidden font-sans">
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row w-full relative overflow-hidden font-sans">
         <Sidebar user={user} handleLogout={handleLogout} />
         {/* Main Content Area */}
         <main className=" w-full mx-auto px-4 sm:px-4 lg:px-8 py-6 relative z-10 flex flex-col gap-8 overflow-y-auto max-h-screen">
