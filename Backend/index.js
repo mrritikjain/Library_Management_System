@@ -15,6 +15,12 @@ import cookieParser from "cookie-parser";
 dotenv.config();
 const app = express();
 
+// Normalize double slashes in URLs to prevent 404 routing issues
+app.use((req, res, next) => {
+    req.url = req.url.replace(/\/{2,}/g, "/");
+    next();
+});
+
 let frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 // Clean up any accidental quotes or trailing slash from environment variables
 frontendUrl = frontendUrl.replace(/^['"`]+|['"`]+$/g, "").trim();

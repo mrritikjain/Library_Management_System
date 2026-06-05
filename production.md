@@ -21,6 +21,16 @@ Follow these direct steps to deploy your application:
 6. Click **Deploy Site**.
 7. Note down your final Netlify site URL (e.g., `https://your-app-name.netlify.app`) for the backend configuration.
 
+
+> [!TIP]
+> **How to update the backend URL on Netlify after deployment:**
+> 1. Go to your **Netlify Dashboard** and select your site.
+> 2. Navigate to **Site configuration** (or **Site settings**) ➔ **Environment variables** in the left menu.
+> 3. Find `VITE_API_URL`, click the **options (three dots)** button next to it, and click **Edit**.
+> 4. Change the value to your new backend URL: `https://library-management-tool.onrender.com` (ensure there is **no trailing slash**).
+> 5. Click **Save**.
+> 6. **Crucial**: Because React embeds environment variables at build-time, you must trigger a rebuild. Go to the **Deploys** tab in Netlify, click the **Trigger deploy** dropdown, and select **Deploy site**.
+
 ---
 
 ## Step 2: Deploy the Backend on Render
