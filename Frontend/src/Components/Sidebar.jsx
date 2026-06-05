@@ -4,18 +4,24 @@ import { NavLink } from "react-router-dom";
 const Sidebar = (props) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const sidebarLinks = [
-    { name: "Dashboard", path: "/dashboard", icon: "📊" },
-    { name: "Seats", path: "/seats", icon: "🪑" },
-    { name: "Students", path: "/students", icon: "👥" },
-    { name: "Fees", path: "/fees", icon: "💵" },
-    { name: "Expenses", path: "/expenses", icon: "📉" },
-    { name: "Reports", path: "/reports", icon: "📈" },
-    { name: "Notifications", path: "/notifications", icon: "🔔" },
-    { name: "Settings", path: "/settings", icon: "⚙️" },
-  ];
-
   if (!props.user) return null;
+
+  const sidebarLinks = [];
+  if (props.user.isSuperAdmin) {
+    sidebarLinks.push({ name: "Sub. Requests", path: "/admin/subscriptions", icon: "🔑" });
+  } else {
+    sidebarLinks.push(
+      { name: "Dashboard", path: "/dashboard", icon: "📊" },
+      { name: "Seats", path: "/seats", icon: "🪑" },
+      { name: "Students", path: "/students", icon: "👥" },
+      { name: "Fees", path: "/fees", icon: "💵" },
+      { name: "Expenses", path: "/expenses", icon: "📉" },
+      { name: "Reports", path: "/reports", icon: "📈" },
+      { name: "Notifications", path: "/notifications", icon: "🔔" },
+      { name: "Subscription", path: "/subscription", icon: "💳" },
+      { name: "Settings", path: "/settings", icon: "⚙️" }
+    );
+  }
 
   return (
     <>

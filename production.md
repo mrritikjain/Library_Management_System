@@ -62,3 +62,31 @@ Ensure your cloud database accepts incoming requests from Render's hosting envir
 3. Click the **Add IP Address** button.
 4. Select **Allow Access From Anywhere** (or manually input `0.0.0.0/0`).
 5. Click **Confirm** to apply.
+
+---
+
+## Step 4: Managing Client Subscriptions (Super-Admin Guide)
+
+To manage, approve, or reject subscriptions for your library owners, you need to designate your own login account as a **Super-Admin**.
+
+### 1. How to Make Your Account a Super-Admin
+I have created a simple developer command-line script in `Backend/scripts/makeAdmin.js` that allows you to easily toggle super-admin status.
+
+1. Open your terminal in the **Backend** folder.
+2. Run the script followed by your registered admin email:
+   ```bash
+   node scripts/makeAdmin.js your-registered-email@example.com
+   ```
+3. The script will connect to your MongoDB database (configured in your `.env`) and automatically:
+   - Set `isSuperAdmin` to `true`.
+   - Set `subscriptionStatus` to `"Active"`.
+   - Grant you a 10-year subscription bypass so your access never expires.
+
+### 2. Approving / Rejecting Payment Proofs
+Once your account is set to Super-Admin:
+1. Log in to your website.
+2. You will see a new tab in your left sidebar: **Sub. Requests 🔑**.
+3. On that page, you can see all manual payment confirmations submitted by other library owners.
+4. Click on the screenshot thumbnail to inspect their payment receipt.
+5. Click **Approve** (activates their membership for 365 days) or **Reject**.
+

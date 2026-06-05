@@ -7,16 +7,18 @@ const Notifications = () => {
   const [logs, setLogs] = useState([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [triggering, setTriggering] = useState(false);
 
   const navigate = useNavigate();
 
   const fetchNotificationData = async () => {
     try {
       // Fetch user info for sidebar
-      const userRes = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/userDetails`, {
-        withCredentials: true,
-      });
+      const userRes = await axios.get(
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/userDetails`,
+        {
+          withCredentials: true,
+        },
+      );
       setUser(userRes.data);
 
       // Fetch logs
@@ -48,34 +50,6 @@ const Notifications = () => {
       navigate("/");
     } catch (error) {
       console.error("Logout error:", error);
-    }
-  };
-
-  const handleTriggerCron = async () => {
-    try {
-      setTriggering(true);
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/notifications/trigger`,
-        {},
-        {
-          withCredentials: true,
-        },
-      );
-
-      const { processedCount, sentCount, messagesSent } = res.data.results;
-
-      // Update logs list
-      await fetchNotificationData();
-
-      alert(
-        `Automated check completed!\n` +
-          `- Processed: ${processedCount} active student(s)\n` +
-          `- Alerts Sent: ${sentCount} new notification(s)`,
-      );
-    } catch (error) {
-      alert("Failed to run automated reminder check.");
-    } finally {
-      setTriggering(false);
     }
   };
 

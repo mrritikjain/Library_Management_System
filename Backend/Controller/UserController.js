@@ -116,6 +116,25 @@ export const userDetails = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: "user not found" });
         }
+
+        // Auto-check and update subscription status dynamically
+        let updated = false;
+        if (user.subscriptionStatus === "Active" && user.subscriptionExpiry && new Date(user.subscriptionExpiry).getTime() < Date.now()) {
+            user.subscriptionStatus = "Expired";
+            updated = true;
+        } else if (user.subscriptionStatus === "Trial") {
+            const trialPeriod = 15 * 24 * 60 * 60 * 1000; // 15 days
+            const registrationTime = new Date(user.createdAt).getTime();
+            if (Date.now() - registrationTime > trialPeriod) {
+                user.subscriptionStatus = "Expired";
+                updated = true;
+            }
+        }
+
+        if (updated) {
+            await user.save();
+        }
+
         res.status(200).json(user);
     } catch (error) {
         console.log(error);

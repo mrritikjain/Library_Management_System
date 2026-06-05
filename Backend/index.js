@@ -11,6 +11,9 @@ import NotificationRoute from "./routes/NotificationRoute.js";
 import { runNotificationCron } from "./utils/notificationSystem.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { protect } from "./middleware/authMiddleware.js";
+import { checkSubscription } from "./middleware/subscriptionMiddleware.js";
+import SubscriptionRoute from "./routes/SubscriptionRoute.js";
 
 dotenv.config();
 const app = express();
@@ -36,12 +39,13 @@ app.use(cookieParser());
 app.use("/uploads", express.static("uploads"));
 
 app.use("/api", UserRoute);
-app.use("/api/seats", SeatRoute);
-app.use("/api/students", StudentRoute);
-app.use("/api/fees", FeeRoute);
-app.use("/api/expenses", ExpenseRoute);
-app.use("/api/dashboard", DashboardRoute);
-app.use("/api/notifications", NotificationRoute);
+app.use("/api/subscriptions", SubscriptionRoute);
+app.use("/api/seats", protect, checkSubscription, SeatRoute);
+app.use("/api/students", protect, checkSubscription, StudentRoute);
+app.use("/api/fees", protect, checkSubscription, FeeRoute);
+app.use("/api/expenses", protect, checkSubscription, ExpenseRoute);
+app.use("/api/dashboard", protect, checkSubscription, DashboardRoute);
+app.use("/api/notifications", protect, checkSubscription, NotificationRoute);
 
 const PORT = process.env.PORT || 3000;
 

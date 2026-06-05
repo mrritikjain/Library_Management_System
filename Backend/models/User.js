@@ -29,6 +29,18 @@ const UserSchema = new mongoose.Schema({
      type: String,
      required: true,
      minlength: 7,
+   },
+   subscriptionStatus: {
+     type: String,
+     enum: ["Trial", "Pending", "Active", "Expired"],
+     default: "Trial",
+   },
+   subscriptionExpiry: {
+     type: Date,
+   },
+   isSuperAdmin: {
+     type: Boolean,
+     default: false,
    }
 }, { timestamps: true }); // lowercase 't'
 

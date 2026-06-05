@@ -9,6 +9,9 @@ import Expenses from "./Pages/Expenses";
 import Reports from "./Pages/Reports";
 import Settings from "./Pages/Settings";
 import Notifications from "./Pages/Notifications";
+import Subscription from "./Pages/Subscription";
+import AdminSubscriptions from "./Pages/AdminSubscriptions";
+import { ProtectedRoute, AdminRoute } from "./Components/ProtectedRoute";
 
 const App = () => {
   return (
@@ -18,16 +21,20 @@ const App = () => {
           {/* Public routes */}
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/subscription" element={<Subscription />} />
 
-          {/* Persistent Sidebar Layout Routes */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/seats" element={<Seats />} />
-          <Route path="/students" element={<Students />} />
-          <Route path="/fees" element={<Fees />} />
-          <Route path="/expenses" element={<Expenses />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/notifications" element={<Notifications />} />
+          {/* Protected Sidebar Layout Routes */}
+          <Route path="/dashboard" element={<ProtectedRoute element={Dashboard} />} />
+          <Route path="/seats" element={<ProtectedRoute element={Seats} />} />
+          <Route path="/students" element={<ProtectedRoute element={Students} />} />
+          <Route path="/fees" element={<ProtectedRoute element={Fees} />} />
+          <Route path="/expenses" element={<ProtectedRoute element={Expenses} />} />
+          <Route path="/reports" element={<ProtectedRoute element={Reports} />} />
+          <Route path="/settings" element={<ProtectedRoute element={Settings} />} />
+          <Route path="/notifications" element={<ProtectedRoute element={Notifications} />} />
+
+          {/* Super Admin Routes */}
+          <Route path="/admin/subscriptions" element={<AdminRoute element={AdminSubscriptions} />} />
         </Routes>
       </div>
     </Router>
