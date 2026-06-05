@@ -23,13 +23,13 @@ const Expenses = () => {
   const fetchData = async () => {
     try {
       // User Info
-      const userRes = await axios.get("http://localhost:5000/api/userDetails", {
+      const userRes = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/userDetails`, {
         withCredentials: true,
       });
       setUser(userRes.data);
 
       // Expenses ledger
-      const expensesRes = await axios.get("http://localhost:5000/api/expenses/all", {
+      const expensesRes = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/expenses/all`, {
         withCredentials: true,
       });
       setExpenses(expensesRes.data.expenses);
@@ -47,7 +47,7 @@ const Expenses = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post("http://localhost:5000/api/logout", {}, { withCredentials: true });
+      await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/logout`, {}, { withCredentials: true });
       navigate("/");
     } catch (error) {
       console.error("Logout error:", error);
@@ -58,7 +58,7 @@ const Expenses = () => {
   const handleAddExpense = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/api/expenses/record", formData, {
+      await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/expenses/record`, formData, {
         withCredentials: true,
       });
 
@@ -83,7 +83,7 @@ const Expenses = () => {
       return;
     }
     try {
-      await axios.delete(`http://localhost:5000/api/expenses/${expenseId}`, {
+      await axios.delete(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/expenses/${expenseId}`, {
         withCredentials: true,
       });
       await fetchData();

@@ -16,31 +16,31 @@ const Reports = () => {
   const fetchData = async () => {
     try {
       // User Info
-      const userRes = await axios.get("http://localhost:5000/api/userDetails", {
+      const userRes = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/userDetails`, {
         withCredentials: true,
       });
       setUser(userRes.data);
 
       // Seats info
-      const seatsRes = await axios.get("http://localhost:5000/api/seats/all", {
+      const seatsRes = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/seats/all`, {
         withCredentials: true,
       });
       setSeats(seatsRes.data.seats);
 
       // Students info
-      const studentsRes = await axios.get("http://localhost:5000/api/students/all", {
+      const studentsRes = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/students/all`, {
         withCredentials: true,
       });
       setStudents(studentsRes.data.students);
 
       // Fees info
-      const feesRes = await axios.get("http://localhost:5000/api/fees/all", {
+      const feesRes = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/fees/all`, {
         withCredentials: true,
       });
       setFees(feesRes.data.fees);
 
       // Expenses info
-      const expensesRes = await axios.get("http://localhost:5000/api/expenses/all", {
+      const expensesRes = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/expenses/all`, {
         withCredentials: true,
       });
       setExpenses(expensesRes.data.expenses);
@@ -58,7 +58,7 @@ const Reports = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post("http://localhost:5000/api/logout", {}, { withCredentials: true });
+      await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/logout`, {}, { withCredentials: true });
       navigate("/");
     } catch (error) {
       console.error("Logout error:", error);

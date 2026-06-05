@@ -14,14 +14,14 @@ const Notifications = () => {
   const fetchNotificationData = async () => {
     try {
       // Fetch user info for sidebar
-      const userRes = await axios.get("http://localhost:5000/api/userDetails", {
+      const userRes = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/userDetails`, {
         withCredentials: true,
       });
       setUser(userRes.data);
 
       // Fetch logs
       const logsRes = await axios.get(
-        "http://localhost:5000/api/notifications/logs",
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/notifications/logs`,
         {
           withCredentials: true,
         },
@@ -41,7 +41,7 @@ const Notifications = () => {
   const handleLogout = async () => {
     try {
       await axios.post(
-        "http://localhost:5000/api/logout",
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/logout`,
         {},
         { withCredentials: true },
       );
@@ -55,7 +55,7 @@ const Notifications = () => {
     try {
       setTriggering(true);
       const res = await axios.post(
-        "http://localhost:5000/api/notifications/trigger",
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/notifications/trigger`,
         {},
         {
           withCredentials: true,

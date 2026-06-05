@@ -27,7 +27,7 @@ const Settings = () => {
 
   const fetchData = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/userDetails", {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/userDetails`, {
         withCredentials: true,
       });
       setUser(res.data);
@@ -50,7 +50,7 @@ const Settings = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post("http://localhost:5000/api/logout", {}, { withCredentials: true });
+      await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/logout`, {}, { withCredentials: true });
       navigate("/");
     } catch (error) {
       console.error("Logout error:", error);
@@ -63,7 +63,7 @@ const Settings = () => {
     try {
       setUpdatingProfile(true);
       const res = await axios.put(
-        "http://localhost:5000/api/updateSettings",
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/updateSettings`,
         {
           OName: profileData.OName,
           LName: profileData.LName,
@@ -91,7 +91,7 @@ const Settings = () => {
     try {
       setUpdatingPassword(true);
       await axios.put(
-        "http://localhost:5000/api/updateSettings",
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/updateSettings`,
         { password: passwordData.password },
         { withCredentials: true }
       );

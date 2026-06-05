@@ -46,19 +46,19 @@ const Students = () => {
   const fetchData = async () => {
     try {
       // User info
-      const userRes = await axios.get("http://localhost:5000/api/userDetails", {
+      const userRes = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/userDetails`, {
         withCredentials: true,
       });
       setUser(userRes.data);
 
       // Students info
-      const studentsRes = await axios.get("http://localhost:5000/api/students/all", {
+      const studentsRes = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/students/all`, {
         withCredentials: true,
       });
       setStudents(studentsRes.data.students);
 
       // Seats info for picker
-      const seatsRes = await axios.get("http://localhost:5000/api/seats/all", {
+      const seatsRes = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/seats/all`, {
         withCredentials: true,
       });
       setSeats(seatsRes.data.seats);
@@ -76,7 +76,7 @@ const Students = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post("http://localhost:5000/api/logout", {}, { withCredentials: true });
+      await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/logout`, {}, { withCredentials: true });
       navigate("/");
     } catch (error) {
       console.error("Logout error:", error);
@@ -115,7 +115,7 @@ const Students = () => {
         data.append("aadharCard", aadharFile);
       }
 
-      await axios.post("http://localhost:5000/api/students/register", data, {
+      await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/students/register`, data, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -148,7 +148,7 @@ const Students = () => {
         data.append("aadharCard", aadharFile);
       }
 
-      await axios.put(`http://localhost:5000/api/students/${selectedStudent._id}`, data, {
+      await axios.put(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/students/${selectedStudent._id}`, data, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -171,7 +171,7 @@ const Students = () => {
       return;
     }
     try {
-      await axios.delete(`http://localhost:5000/api/students/${studentId}`, {
+      await axios.delete(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/students/${studentId}`, {
         withCredentials: true,
       });
       await fetchData();
@@ -190,7 +190,7 @@ const Students = () => {
         ...paymentData,
       };
 
-      await axios.post("http://localhost:5000/api/fees/record", payload, {
+      await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/fees/record`, payload, {
         withCredentials: true,
       });
 
@@ -360,7 +360,7 @@ const Students = () => {
                           {student.aadharCard && (
                             <div className="mt-1">
                               <a
-                                href={`http://localhost:5000/uploads/${student.aadharCard}`}
+                                href={`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/uploads/${student.aadharCard}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold hover:underline flex items-center gap-1"
@@ -501,7 +501,7 @@ const Students = () => {
                   <p className="text-[10px] text-slate-500 mt-1">
                     Current file:{" "}
                     <a
-                      href={`http://localhost:5000/uploads/${formData.aadharCard}`}
+                      href={`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/uploads/${formData.aadharCard}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-indigo-400 hover:underline"

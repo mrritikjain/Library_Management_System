@@ -24,19 +24,19 @@ const Fees = () => {
   const fetchData = async () => {
     try {
       // User Info
-      const userRes = await axios.get("http://localhost:5000/api/userDetails", {
+      const userRes = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/userDetails`, {
         withCredentials: true,
       });
       setUser(userRes.data);
 
       // Fees ledger
-      const feesRes = await axios.get("http://localhost:5000/api/fees/all", {
+      const feesRes = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/fees/all`, {
         withCredentials: true,
       });
       setFees(feesRes.data.fees);
 
       // Active students list for dropdown
-      const studentsRes = await axios.get("http://localhost:5000/api/students/all", {
+      const studentsRes = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/students/all`, {
         withCredentials: true,
       });
       setStudents(studentsRes.data.students.filter((s) => s.status === "Active"));
@@ -54,7 +54,7 @@ const Fees = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post("http://localhost:5000/api/logout", {}, { withCredentials: true });
+      await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/logout`, {}, { withCredentials: true });
       navigate("/");
     } catch (error) {
       console.error("Logout error:", error);
@@ -65,7 +65,7 @@ const Fees = () => {
   const handleRecordPayment = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/api/fees/record", formData, {
+      await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/fees/record`, formData, {
         withCredentials: true,
       });
 
@@ -90,7 +90,7 @@ const Fees = () => {
       return;
     }
     try {
-      await axios.delete(`http://localhost:5000/api/fees/${feeId}`, {
+      await axios.delete(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/fees/${feeId}`, {
         withCredentials: true,
       });
       await fetchData();

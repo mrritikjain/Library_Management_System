@@ -11,17 +11,16 @@ Since the system consists of a **Vite React Frontend** and an **Express.js Backe
 
 ## Part 1: Preparing the Code for Production
 
-### 1. Externalize the Frontend API URL
-Currently, the frontend files hardcode `http://localhost:5000` as the API url. We must update them to use environment variables.
-Create a `.env.production` file inside the `Frontend/` folder:
-```env
-VITE_API_URL=https://your-backend-url.onrender.com
-```
+> [!NOTE]
+> **Status: Already Completed**
+> All code preparation steps (integrating dynamic environment variables, securing cross-origin cookies, configuring CORS, and writing redirects) have already been set up for you in the codebase. You only need to follow the dashboard deployment steps below.
 
-In your frontend code (e.g., `Students.jsx`, `Seats.jsx`, `Fees.jsx`, `Dashboard.jsx`), replace occurrences of `"http://localhost:5000"` with:
+### 1. Externalize the Frontend API URL
+The frontend has been updated to dynamically load the API base URL. It reads the `VITE_API_URL` variable, falling back to localhost during local development:
 ```javascript
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 ```
+A template `.env.production` file has been added to `Frontend/` for you.
 
 ### 2. Configure Backend CORS
 In `Backend/index.js`, update the CORS configuration to accept requests from your production Netlify URL instead of only `http://localhost:5173`:

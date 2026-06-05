@@ -15,13 +15,13 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         const userResponse = await axios.get(
-          "http://localhost:5000/api/userDetails",
+          `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/userDetails`,
           { withCredentials: true },
         );
         setUser(userResponse.data);
 
         const statsResponse = await axios.get(
-          "http://localhost:5000/api/dashboard/stats",
+          `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/dashboard/stats`,
           { withCredentials: true },
         );
         setStats(statsResponse.data.stats);
@@ -37,7 +37,7 @@ const Dashboard = () => {
   const handleLogout = async () => {
     try {
       await axios.post(
-        "http://localhost:5000/api/logout",
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/logout`,
         {},
         { withCredentials: true },
       );

@@ -23,7 +23,7 @@ const Login = () => {
 
   const submitCall = async (data) => {
     try {
-      const res = await axios.post("http://localhost:5000/api/login", data, {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/login`, data, {
         withCredentials: true,
       });
       if (res.status === 200) {
@@ -57,7 +57,7 @@ const Login = () => {
 
     try {
       setForgotLoading(true);
-      const res = await axios.post("http://localhost:5000/api/forgot-password", forgotData);
+      const res = await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/forgot-password`, forgotData);
       if (res.status === 200) {
         alert("Password reset successfully. You can now log in with your new password.");
         setIsForgotModalOpen(false);

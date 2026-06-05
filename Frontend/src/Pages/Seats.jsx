@@ -14,7 +14,7 @@ const Seats = () => {
 
   const fetchSeatsData = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/seats/all", {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/seats/all`, {
         withCredentials: true,
       });
       setSeats(res.data.seats);
@@ -28,7 +28,7 @@ const Seats = () => {
       try {
         // Fetch user details for Sidebar display
         const userRes = await axios.get(
-          "http://localhost:5000/api/userDetails",
+          `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/userDetails`,
           {
             withCredentials: true,
           },
@@ -52,7 +52,7 @@ const Seats = () => {
   const handleLogout = async () => {
     try {
       await axios.post(
-        "http://localhost:5000/api/logout",
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/logout`,
         {},
         { withCredentials: true },
       );
@@ -71,7 +71,7 @@ const Seats = () => {
     try {
       setActionLoading(true);
       await axios.put(
-        `http://localhost:5000/api/students/${studentId}`,
+        `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/students/${studentId}`,
         { seatNumber: 0, slot: "none" },
         { withCredentials: true }
       );
