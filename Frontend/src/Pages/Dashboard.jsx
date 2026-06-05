@@ -64,6 +64,35 @@ const Dashboard = () => {
     );
   }
 
+  // Subscription calculation
+  const getSubscriptionBadge = () => {
+    if (!user) return null;
+
+    if (user.subscriptionStatus === "Active") {
+      const daysLeft = Math.max(0, Math.ceil((new Date(user.subscriptionExpiry).getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
+      return (
+        <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 border border-emerald-500/25 text-emerald-400">
+          👑 Premium Membership: Active ({daysLeft} day{daysLeft !== 1 ? "s" : ""} remaining)
+        </div>
+      );
+    } else if (user.subscriptionStatus === "Pending") {
+      return (
+        <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 border border-amber-500/25 text-amber-400 animate-pulse">
+          ⏳ Verification Pending (Admin Review)
+        </div>
+      );
+    } else {
+      const trialDuration = 15 * 24 * 60 * 60 * 1000; // 15 days
+      const elapsed = Date.now() - new Date(user.createdAt).getTime();
+      const trialDaysRemaining = Math.max(0, Math.ceil((trialDuration - elapsed) / (24 * 60 * 60 * 1000)));
+      return (
+        <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 border border-indigo-500/25 text-indigo-300">
+          🎁 Free Trial: {trialDaysRemaining} day{trialDaysRemaining !== 1 ? "s" : ""} remaining
+        </div>
+      );
+    }
+  };
+
   return (
     <>
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row w-full relative overflow-hidden font-sans">
@@ -82,6 +111,7 @@ const Dashboard = () => {
               Your library hub dashboard is active. Seamlessly manage library
               resources, capacity, and student details.
             </p>
+            {getSubscriptionBadge()}
           </div>
 
           {/* Statics part */}

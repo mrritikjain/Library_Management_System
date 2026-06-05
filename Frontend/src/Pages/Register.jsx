@@ -51,6 +51,9 @@ const Register = () => {
           <p className="text-slate-400 text-sm mt-2">
             Create an account to manage your library seating and members.
           </p>
+          <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 border border-indigo-500/25 text-indigo-300">
+            🎁 15-Day Free Trial Included
+          </div>
         </div>
 
         <form onSubmit={handleSubmit(submitCall)} className="space-y-5">
