@@ -14,8 +14,15 @@ const Subscription = () => {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const navigate = useNavigate();
+
+  const handleCopyUPI = () => {
+    navigator.clipboard.writeText("jainritik0021@okicici");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const fetchUserData = async () => {
     try {
@@ -189,28 +196,72 @@ const Subscription = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
           
           {/* Left Column: QR and UPI info */}
-          <div className="bg-slate-950/45 p-6 rounded-2xl border border-slate-800/60 flex flex-col items-center text-center">
-            <h2 className="text-lg font-bold text-slate-200 mb-2">Scan & Pay</h2>
-            <p className="text-xs text-slate-400 mb-4">Scan the QR code using any UPI app (GPay, PhonePe, Paytm)</p>
+          <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800/80 flex flex-col items-center text-center relative overflow-hidden group hover:border-indigo-500/35 transition-all duration-300 shadow-lg shadow-indigo-950/10">
+            {/* Header border stripe */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-indigo-500 via-violet-500 to-pink-500" />
             
-            {/* QR Code Container */}
-            <div className="bg-white p-3 rounded-xl border border-slate-850 shadow-inner w-56 h-56 flex items-center justify-center overflow-hidden mb-5">
-              <img src="/qr_code.png" alt="Payment QR Code" className="w-full h-full object-cover" />
+            <div className="flex items-center gap-2 mb-4 mt-2">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Instant UPI Payment</h2>
+            </div>
+            
+            {/* QR Card with Premium design */}
+            <div className="relative p-4 rounded-2xl bg-white border border-slate-100 shadow-2xl mb-5 w-56 h-56 flex items-center justify-center group/qr overflow-hidden">
+              <img src="/qr_code.png" alt="Payment QR Code" className="w-full h-full object-contain relative z-10 transition-transform duration-300 group-hover/qr:scale-[1.02]" />
+              
+              {/* Scan Line effect */}
+              <div className="absolute left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-indigo-500 to-transparent shadow-[0_0_8px_rgba(99,102,241,0.8)] z-20 animate-scan-line pointer-events-none" />
+              
+              {/* Subtle grid accent inside white card */}
+              <div className="absolute inset-0 bg-[radial-gradient(#f0f4ff_1.5px,transparent_1.5px)] [background-size:16px_16px] opacity-15 pointer-events-none" />
             </div>
 
-            {/* Plan Info */}
-            <div className="w-full space-y-3 pt-3 border-t border-slate-800/80">
-              <div className="flex justify-between items-center text-sm">
+            <p className="text-xs text-slate-400 mb-6 max-w-xs">
+              Scan the QR using GPay, PhonePe, Paytm, or any banking app to complete your transaction.
+            </p>
+
+            {/* Plan Details & Action List */}
+            <div className="w-full space-y-3 pt-4 border-t border-slate-800/80">
+              <div className="flex justify-between items-center text-xs sm:text-sm">
                 <span className="text-slate-400">Membership Tier</span>
-                <span className="font-bold text-slate-200">1 Year Access</span>
+                <span className="font-semibold text-slate-200">1 Year Access</span>
               </div>
-              <div className="flex justify-between items-center text-sm">
+              <div className="flex justify-between items-center text-xs sm:text-sm">
                 <span className="text-slate-400">Plan Amount</span>
-                <span className="font-bold text-indigo-400">₹ 3,000 / year</span>
+                <span className="font-bold text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-full text-xs">₹ 3,000 / year</span>
               </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-slate-400">UPI ID</span>
-                <span className="font-bold text-slate-200 select-all">ritikjain@upi</span>
+              
+              {/* UPI ID Row with Interactive Copy Button */}
+              <div className="flex flex-col sm:flex-row gap-2 justify-between items-center pt-2 mt-1 bg-slate-950/50 p-2.5 rounded-xl border border-slate-850">
+                <div className="flex flex-col items-start text-left">
+                  <span className="text-[10px] uppercase font-semibold tracking-wider text-slate-500">UPI ID for payment</span>
+                  <span className="text-xs sm:text-sm font-mono text-slate-200 select-all font-semibold">jainritik0021@okicici</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopyUPI}
+                  className={`w-full sm:w-auto cursor-pointer flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border ${
+                    copied 
+                      ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400' 
+                      : 'bg-slate-900 border-slate-800 text-slate-350 hover:bg-slate-800 hover:text-white hover:border-slate-700'
+                  }`}
+                >
+                  {copied ? (
+                    <>
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                      </svg>
+                      Copy ID
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>
