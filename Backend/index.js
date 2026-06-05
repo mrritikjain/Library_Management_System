@@ -15,9 +15,16 @@ import cookieParser from "cookie-parser";
 dotenv.config();
 const app = express();
 
+let frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+// Clean up any accidental quotes or trailing slash from environment variables
+frontendUrl = frontendUrl.replace(/^['"`]+|['"`]+$/g, "").trim();
+if (frontendUrl.endsWith("/")) {
+    frontendUrl = frontendUrl.slice(0, -1);
+}
+
 app.use(express.json());
 app.use(cors(
-    {origin: process.env.FRONTEND_URL || "http://localhost:5173", credentials: true}
+    {origin: frontendUrl, credentials: true}
 ));
 app.use(cookieParser());
 app.use("/uploads", express.static("uploads"));
