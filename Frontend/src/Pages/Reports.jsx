@@ -132,7 +132,7 @@ const Reports = () => {
 
       <Sidebar user={user} handleLogout={handleLogout} />
 
-      <main className="flex-1 p-6 sm:p-8 relative z-10 overflow-y-auto max-h-screen">
+      <main className="flex-1 p-6 pt-20 md:pt-8 sm:p-8 relative z-10 overflow-y-auto max-h-screen">
         <div className="max-w-7xl mx-auto flex flex-col gap-6">
           {/* Header */}
           <div>

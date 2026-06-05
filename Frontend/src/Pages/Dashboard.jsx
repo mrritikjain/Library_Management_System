@@ -69,16 +69,16 @@ const Dashboard = () => {
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row w-full relative overflow-hidden font-sans">
         <Sidebar user={user} handleLogout={handleLogout} />
         {/* Main Content Area */}
-        <main className=" w-full mx-auto px-4 sm:px-4 lg:px-8 py-6 relative z-10 flex flex-col gap-8 overflow-y-auto max-h-screen">
+        <main className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-20 md:pt-6 relative z-10 flex flex-col gap-6 md:gap-8 overflow-y-auto max-h-screen">
           {/* Welcome Banner */}
-          <div className="bg-linear-to-r from-indigo-950/30 via-violet-950/20 to-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden transition-all duration-300 hover:border-indigo-500/20">
-            <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-              <span className="text-8xl">🏢</span>
+          <div className="bg-linear-to-r from-indigo-950/30 via-violet-950/20 to-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-5 sm:p-8 shadow-2xl relative overflow-hidden transition-all duration-300 hover:border-indigo-500/20">
+            <div className="absolute top-0 right-0 p-4 sm:p-8 opacity-5 pointer-events-none">
+              <span className="text-6xl sm:text-8xl">🏢</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-linear-to-r from-indigo-200 via-violet-200 to-pink-200 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight bg-linear-to-r from-indigo-200 via-violet-200 to-pink-200 bg-clip-text text-transparent">
               Welcome back, {user.OName}!
             </h1>
-            <p className="text-slate-400 mt-2 max-w-2xl text-sm sm:text-base">
+            <p className="text-slate-400 mt-2 max-w-2xl text-xs sm:text-sm md:text-base">
               Your library hub dashboard is active. Seamlessly manage library
               resources, capacity, and student details.
             </p>

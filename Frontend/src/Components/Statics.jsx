@@ -64,29 +64,29 @@ const Statics = ({ stats }) => {
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 w-full">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-5 w-full">
         {staticsData.map((stat, index) => {
           return (
             <div
               key={index}
-              className="bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-xl p-5 hover:border-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/5 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+              className="bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-xl p-3 sm:p-5 hover:border-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/5 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
             >
-              <div className="flex items-center gap-4">
+              <div className="flex flex-row items-center gap-2.5 sm:gap-4">
                 {/* Icon Wrapper */}
                 <div
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center border shrink-0 ${stat.themeClass}`}
+                  className={`w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center border shrink-0 text-sm sm:text-lg ${stat.themeClass}`}
                 >
-                  <FontAwesomeIcon icon={stat.icon} className="text-lg" />
+                  <FontAwesomeIcon icon={stat.icon} />
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider truncate">
+                  <p className="text-slate-500 text-[10px] sm:text-xs font-semibold uppercase tracking-wider truncate">
                     {stat.title}
                   </p>
-                  <p className="mt-1 text-2xl font-black text-slate-100 tracking-tight truncate">
+                  <p className="mt-0.5 sm:mt-1 text-base sm:text-2xl font-black text-slate-100 tracking-tight truncate">
                     {stat.value}
                   </p>
-                  <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+                  <p className="text-[9px] sm:text-[10px] text-slate-500 font-medium mt-0.5">
                     {stat.subtext}
                   </p>
                 </div>

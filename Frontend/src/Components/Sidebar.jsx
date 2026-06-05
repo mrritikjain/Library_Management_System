@@ -43,8 +43,6 @@ const Sidebar = (props) => {
         </div>
       </header>
 
-      {/* Spacer to prevent content overlap under the mobile header */}
-      <div className="h-16 md:hidden shrink-0" />
 
       {/* Backdrop overlay for mobile drawer */}
       {isOpen && (
