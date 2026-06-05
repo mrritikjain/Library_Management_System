@@ -1,5 +1,8 @@
 import Student from "../models/Student.js";
 import seat from "../models/seat.js";
+import User from "../models/User.js";
+import Fee from "../models/Fee.js";
+import { sendRegistrationMessage, getPlanDays } from "../utils/notificationSystem.js";
 import fs from "fs";
 import path from "path";
 
@@ -93,6 +96,12 @@ export const createStudent = async (req, res) => {
       await seatDoc.save();
     }
 
+    // Trigger registration welcome message
+    const userObj = await User.findById(createdBy);
+    if (userObj) {
+      await sendRegistrationMessage(student, userObj);
+    }
+
     res.status(201).json({ success: true, message: "Student registered successfully", student });
   } catch (error) {
     console.error("Error in createStudent:", error);
@@ -112,7 +121,53 @@ export const getStudents = async (req, res) => {
   try {
     const createdBy = req.userID;
     const students = await Student.find({ createdBy }).sort({ createdAt: -1 });
-    res.status(200).json({ success: true, students });
+    
+    const studentIds = students.map(s => s._id);
+    const allFees = await Fee.find({ studentId: { $in: studentIds } }).sort({ paymentDate: -1 });
+    
+    const feesMap = {};
+    allFees.forEach(fee => {
+      const sId = String(fee.studentId);
+      if (!feesMap[sId]) {
+        feesMap[sId] = [];
+      }
+      feesMap[sId].push(fee);
+    });
+    
+    const decoratedStudents = students.map(s => {
+      const sObj = s.toObject();
+      const studentFees = feesMap[String(sObj._id)] || [];
+      
+      let isDue = false;
+      let isExpired = false;
+      let expiryDate = null;
+      
+      const planDays = getPlanDays(sObj.plan);
+      const joinDate = new Date(sObj.joiningDate || sObj.createdAt);
+      
+      if (studentFees.length === 0) {
+        expiryDate = new Date(joinDate.getTime() + planDays * 24 * 60 * 60 * 1000);
+        isDue = true;
+        isExpired = new Date() > expiryDate;
+      } else {
+        const lastFee = studentFees[0];
+        if (lastFee.dueDate) {
+          expiryDate = new Date(lastFee.dueDate);
+        } else {
+          const payDate = new Date(lastFee.paymentDate);
+          expiryDate = new Date(payDate.getTime() + planDays * 24 * 60 * 60 * 1000);
+        }
+        isExpired = new Date() > expiryDate;
+        isDue = new Date() >= expiryDate;
+      }
+      
+      sObj.isDue = isDue;
+      sObj.isExpired = isExpired;
+      sObj.expiryDate = expiryDate;
+      return sObj;
+    });
+    
+    res.status(200).json({ success: true, students: decoratedStudents });
   } catch (error) {
     console.error("Error in getStudents:", error);
     res.status(500).json({ message: "Internal Server Error" });

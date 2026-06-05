@@ -18,11 +18,23 @@ export const createFee = async (req, res) => {
       return res.status(404).json({ message: "Student not found" });
     }
 
+    let finalDueDate = dueDate;
+    if (!finalDueDate) {
+      const plan = student.plan || "Monthly";
+      let planDays = 30;
+      if (plan === "Quarterly") planDays = 90;
+      else if (plan === "Half-Yearly") planDays = 180;
+      else if (plan === "Yearly") planDays = 365;
+
+      const pDate = paymentDate ? new Date(paymentDate) : new Date();
+      finalDueDate = new Date(pDate.getTime() + planDays * 24 * 60 * 60 * 1000);
+    }
+
     const fee = new Fee({
       studentId,
       amountPaid: Number(amountPaid),
       paymentDate: paymentDate || undefined,
-      dueDate: dueDate || undefined,
+      dueDate: finalDueDate,
       paymentMode: paymentMode || "UPI",
       remarks: remarks ? remarks.trim() : "",
       createdBy,

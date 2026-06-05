@@ -8,6 +8,7 @@ import Fees from "./Pages/Fees";
 import Expenses from "./Pages/Expenses";
 import Reports from "./Pages/Reports";
 import Settings from "./Pages/Settings";
+import Notifications from "./Pages/Notifications";
 
 const App = () => {
   return (
@@ -26,6 +27,7 @@ const App = () => {
           <Route path="/expenses" element={<Expenses />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/notifications" element={<Notifications />} />
         </Routes>
       </div>
     </Router>

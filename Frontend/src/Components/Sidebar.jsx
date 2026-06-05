@@ -8,6 +8,7 @@ const Sidebar = (props) => {
     { name: "Fees", path: "/fees", icon: "💵" },
     { name: "Expenses", path: "/expenses", icon: "📉" },
     { name: "Reports", path: "/reports", icon: "📈" },
+    { name: "Notifications", path: "/notifications", icon: "🔔" },
     { name: "Settings", path: "/settings", icon: "⚙️" },
   ];
 

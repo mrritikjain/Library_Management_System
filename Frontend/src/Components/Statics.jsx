@@ -4,6 +4,7 @@ import {
   faCoins,
   faWallet,
   faChartLine,
+  faExclamationTriangle,
 } from "@fortawesome/free-solid-svg-icons";
 
 const Statics = ({ stats }) => {
@@ -17,6 +18,9 @@ const Statics = ({ stats }) => {
   const expenses = stats?.totalExpenses || 0;
   const profit = stats?.netProfit || 0;
   const margin = feesCollected > 0 ? ((profit / feesCollected) * 100).toFixed(1) : "0.0";
+
+  // Due fees calculation
+  const dueFeesCount = stats?.dueFeesCount || 0;
 
   const staticsData = [
     {
@@ -47,11 +51,20 @@ const Statics = ({ stats }) => {
       themeClass: "bg-violet-500/10 border-violet-500/20 text-violet-400",
       subtext: `Margin: ${margin}%`,
     },
+    {
+      icon: faExclamationTriangle,
+      title: "Overdue Fees",
+      value: `${dueFeesCount} Student${dueFeesCount !== 1 ? "s" : ""}`,
+      themeClass: dueFeesCount > 0 
+        ? "bg-amber-500/10 border-amber-500/20 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.15)] animate-pulse" 
+        : "bg-slate-500/10 border-slate-500/20 text-slate-400",
+      subtext: dueFeesCount > 0 ? "Alerts pending" : "All clear",
+    },
   ];
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 w-full">
         {staticsData.map((stat, index) => {
           return (
             <div

@@ -27,10 +27,59 @@ export const getDashboardStats = async (req, res) => {
     });
     const availableSeats = Math.max(0, totalSeats - occupiedSeats);
 
-    // 3. Count active students
-    const totalStudents = await Student.countDocuments({
+    // 3. Fetch active students & calculate dueFeesCount
+    const activeStudents = await Student.find({
       createdBy: userID,
       status: "Active"
+    });
+    const totalStudents = activeStudents.length;
+
+    const activeStudentIds = activeStudents.map(s => s._id);
+    const activeFees = await Fee.find({ studentId: { $in: activeStudentIds } }).sort({ paymentDate: -1 });
+
+    const feesMap = {};
+    activeFees.forEach(fee => {
+      const sId = String(fee.studentId);
+      if (!feesMap[sId]) {
+        feesMap[sId] = [];
+      }
+      feesMap[sId].push(fee);
+    });
+
+    const getPlanDays = (plan) => {
+      switch (plan) {
+        case "Quarterly": return 90;
+        case "Half-Yearly": return 180;
+        case "Yearly": return 365;
+        case "Monthly":
+        default:
+          return 30;
+      }
+    };
+
+    let dueFeesCount = 0;
+    activeStudents.forEach(student => {
+      const studentFees = feesMap[String(student._id)] || [];
+      const planDays = getPlanDays(student.plan);
+      const joinDate = new Date(student.joiningDate || student.createdAt);
+      
+      let isDue = false;
+      if (studentFees.length === 0) {
+        isDue = true;
+      } else {
+        const lastFee = studentFees[0];
+        let expiryDate;
+        if (lastFee.dueDate) {
+          expiryDate = new Date(lastFee.dueDate);
+        } else {
+          const payDate = new Date(lastFee.paymentDate);
+          expiryDate = new Date(payDate.getTime() + planDays * 24 * 60 * 60 * 1000);
+        }
+        isDue = new Date() >= expiryDate;
+      }
+      if (isDue) {
+        dueFeesCount++;
+      }
     });
 
     // 4. Calculate total fees collected
@@ -56,14 +105,41 @@ export const getDashboardStats = async (req, res) => {
 
     const recentActivities = [];
     for (const student of recentStudentsList) {
-      // Find if this student has any fee records
-      const hasFee = await Fee.findOne({ studentId: student._id, createdBy: userID });
+      const studentFees = await Fee.find({ studentId: student._id }).sort({ paymentDate: -1 });
+      let status = "Paid";
+      
+      if (student.status === "Inactive") {
+        status = "Inactive";
+      } else {
+        const planDays = getPlanDays(student.plan);
+        const joinDate = new Date(student.joiningDate || student.createdAt);
+        if (studentFees.length === 0) {
+          status = "Pending";
+        } else {
+          const lastFee = studentFees[0];
+          let expiryDate;
+          if (lastFee.dueDate) {
+            expiryDate = new Date(lastFee.dueDate);
+          } else {
+            const payDate = new Date(lastFee.paymentDate);
+            expiryDate = new Date(payDate.getTime() + planDays * 24 * 60 * 60 * 1000);
+          }
+          if (new Date() > expiryDate) {
+            status = "Expired";
+          } else if (new Date() >= expiryDate) {
+            status = "Due";
+          } else {
+            status = "Paid";
+          }
+        }
+      }
+
       recentActivities.push({
         _id: student._id,
         name: student.name,
         seat: student.seatNumber ? `Desk-${String(student.seatNumber).padStart(2, "0")}` : "Unassigned",
         plan: student.plan,
-        status: hasFee ? "Paid" : "Pending",
+        status,
       });
     }
 
@@ -74,6 +150,7 @@ export const getDashboardStats = async (req, res) => {
         occupiedSeats,
         availableSeats,
         totalStudents,
+        dueFeesCount,
         feesCollected,
         totalExpenses,
         netProfit,

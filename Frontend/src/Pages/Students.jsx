@@ -252,7 +252,14 @@ const Students = () => {
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.mobile.includes(searchTerm);
 
-    const matchesStatus = statusFilter === "all" || s.status === statusFilter;
+    let matchesStatus = true;
+    if (statusFilter === "Active") {
+      matchesStatus = s.status === "Active";
+    } else if (statusFilter === "Inactive") {
+      matchesStatus = s.status === "Inactive";
+    } else if (statusFilter === "Due") {
+      matchesStatus = s.status === "Active" && s.isDue;
+    }
 
     return matchesSearch && matchesStatus;
   });
@@ -318,6 +325,7 @@ const Students = () => {
               >
                 <option value="all">All Statuses</option>
                 <option value="Active">Active Only</option>
+                <option value="Due">⚠️ Fees Due / Expired</option>
                 <option value="Inactive">Inactive (Left Library)</option>
               </select>
             </div>
@@ -348,7 +356,7 @@ const Students = () => {
                       <tr key={student._id} className="hover:bg-slate-800/20 transition-all duration-150">
                         <td className="py-4 px-4 font-bold text-slate-200">{student.name}</td>
                         <td className="py-4 px-4 text-xs text-slate-400">
-                          <div>📞 {student.mobile}</div>
+                          <div>💬 WhatsApp: {student.mobile}</div>
                           {student.aadharCard && (
                             <div className="mt-1">
                               <a
@@ -363,8 +371,28 @@ const Students = () => {
                           )}
                         </td>
                         <td className="py-4 px-4">
-                          <div className="font-semibold text-slate-300">{student.plan}</div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-semibold text-slate-300">{student.plan}</span>
+                            {student.status === "Active" && student.isDue && (
+                              <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded border uppercase animate-pulse ${
+                                student.isExpired
+                                  ? "bg-red-500/10 border-red-500/20 text-red-400"
+                                  : "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                              }`}>
+                                {student.isExpired ? "Expired" : "Due"}
+                              </span>
+                            )}
+                          </div>
                           <div className="text-xs text-slate-500">₹{student.feeAmount.toLocaleString()}</div>
+                          {student.expiryDate && student.status === "Active" && (
+                            <div className="text-[10px] text-slate-500 mt-0.5">
+                              Exp: {new Date(student.expiryDate).toLocaleDateString("en-IN", {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric"
+                              })}
+                            </div>
+                          )}
                         </td>
                         <td className="py-4 px-4 text-xs text-slate-400">
                           {new Date(student.joiningDate).toLocaleDateString("en-IN", {
@@ -449,13 +477,13 @@ const Students = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Mobile Number</label>
+                  <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">WhatsApp Number</label>
                   <input
                     type="tel"
                     required
                     value={formData.mobile}
                     onChange={(e) => setFormData((prev) => ({ ...prev, mobile: e.target.value }))}
-                    placeholder="9876543210"
+                    placeholder="WhatsApp Number (e.g. 9876543210)"
                     className="w-full bg-slate-950/65 border border-slate-850 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
                   />
                 </div>

@@ -56,7 +56,11 @@ const Activity = ({ activities }) => {
                       className={`px-3 py-1 rounded-full text-xs font-bold inline-block border ${
                         activity.status === "Paid"
                           ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                          : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                          : activity.status === "Expired"
+                          ? "bg-red-500/10 text-red-450 border-red-500/20 animate-pulse"
+                          : activity.status === "Due" || activity.status === "Pending"
+                          ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                          : "bg-slate-500/10 text-slate-400 border-slate-500/20"
                       }`}
                     >
                       {activity.status}

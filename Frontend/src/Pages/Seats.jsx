@@ -99,6 +99,30 @@ const Seats = () => {
     }
   };
 
+  const hasDueFees = (seatItem) => {
+    return (
+      (seatItem.morning?.isOccupied && seatItem.morning?.studentId?.isDue) ||
+      (seatItem.evening?.isOccupied && seatItem.evening?.studentId?.isDue) ||
+      (seatItem.fullDay?.isOccupied && seatItem.fullDay?.studentId?.isDue)
+    );
+  };
+
+  const getWhatsAppLink = (student) => {
+    if (!student) return "";
+    const name = student.name;
+    const plan = student.plan;
+    const fee = student.feeAmount;
+    const expiry = student.expiryDate ? new Date(student.expiryDate).toLocaleDateString("en-IN") : "";
+    
+    let text = "";
+    if (student.isExpired) {
+      text = `Hello ${name}, your subscription at the library expired on ${expiry}. Please deposit your due fee of ₹${fee} to renew and avoid seat cancellation.`;
+    } else {
+      text = `Hello ${name}, this is a reminder to deposit your due fee of ₹${fee} for the ${plan} plan at the library. Please submit it as soon as possible.`;
+    }
+    return `https://wa.me/91${student.mobile}?text=${encodeURIComponent(text)}`;
+  };
+
   // Determine availability status coloring
   const getSeatColorState = (seatItem) => {
     if (seatItem.fullDay?.isOccupied) return "full";
@@ -166,6 +190,7 @@ const Seats = () => {
             <div className="grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-3.5 justify-center">
               {seats.map((seatItem) => {
                 const state = getSeatColorState(seatItem);
+                const isDue = hasDueFees(seatItem);
                 let colorClasses = "";
                 let indicatorDot = null;
 
@@ -194,12 +219,21 @@ const Seats = () => {
                   );
                 }
 
+                if (isDue) {
+                  colorClasses += " border-red-500/60 shadow-[0_0_12px_rgba(239,68,68,0.35)] bg-red-950/15";
+                }
+
                 return (
                   <button
                     key={seatItem._id}
                     onClick={() => setSelectedSeat(seatItem)}
                     className={`aspect-square rounded-xl border flex flex-col items-center justify-center gap-0.5 transition-all duration-300 relative cursor-pointer ${colorClasses}`}
                   >
+                    {isDue && (
+                      <div className="absolute top-1 left-1.5 text-[10px] animate-pulse" title="Fees Overdue / Expired">
+                        ⚠️
+                      </div>
+                    )}
                     {indicatorDot}
                     <span className="text-[9px] font-bold opacity-45 uppercase tracking-wider">
                       Seat
@@ -236,9 +270,24 @@ const Seats = () => {
               {/* Shift Occupancies */}
               <div className="space-y-5 mt-4">
                 {/* Morning Slot */}
-                <div className="bg-slate-950/40 border border-slate-800/80 p-4 rounded-xl">
+                <div className={`bg-slate-950/40 border p-4 rounded-xl transition-all duration-200 ${
+                  selectedSeat.morning?.isOccupied && selectedSeat.morning?.studentId?.isDue
+                    ? "border-red-500/40 shadow-[0_0_10px_rgba(239,68,68,0.15)] bg-red-950/5"
+                    : "border-slate-800/80"
+                }`}>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-amber-400">☀️ Morning Shift</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold uppercase tracking-wider text-amber-400">☀️ Morning Shift</span>
+                      {selectedSeat.morning?.isOccupied && selectedSeat.morning?.studentId?.isDue && (
+                        <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded border uppercase animate-pulse ${
+                          selectedSeat.morning.studentId.isExpired
+                            ? "bg-red-500/20 border-red-500/40 text-red-400"
+                            : "bg-amber-500/20 border-amber-500/40 text-amber-400"
+                        }`}>
+                          ⚠️ {selectedSeat.morning.studentId.isExpired ? "Plan Expired" : "Fees Due"}
+                        </span>
+                      )}
+                    </div>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                       selectedSeat.morning?.isOccupied
                         ? "bg-rose-500/10 border-rose-500/20 text-rose-400"
@@ -255,13 +304,35 @@ const Seats = () => {
                         <p><strong className="text-slate-400">Email:</strong> {selectedSeat.morning.studentId.email}</p>
                       )}
                       <p><strong className="text-slate-400">Plan:</strong> {selectedSeat.morning.studentId.plan}</p>
-                      <button
-                        disabled={actionLoading}
-                        onClick={() => handleReleaseStudent(selectedSeat.morning.studentId._id)}
-                        className="mt-2 bg-rose-500/15 border border-rose-500/35 hover:bg-rose-500/25 text-rose-400 font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 text-[10px]"
-                      >
-                        Release Student
-                      </button>
+                      {selectedSeat.morning.studentId.expiryDate && (
+                        <p>
+                          <strong className="text-slate-400">Expiry Date:</strong>{" "}
+                          <span className={selectedSeat.morning.studentId.isDue ? "text-rose-400 font-bold" : "text-slate-350"}>
+                            {new Date(selectedSeat.morning.studentId.expiryDate).toLocaleDateString("en-IN", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </span>
+                        </p>
+                      )}
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          disabled={actionLoading}
+                          onClick={() => handleReleaseStudent(selectedSeat.morning.studentId._id)}
+                          className="bg-rose-500/15 border border-rose-500/35 hover:bg-rose-500/25 text-rose-400 font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 text-[10px]"
+                        >
+                          Release Student
+                        </button>
+                        <a
+                          href={getWhatsAppLink(selectedSeat.morning.studentId)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center justify-center bg-emerald-650 hover:bg-emerald-600 border border-emerald-500/20 text-white text-[10px] px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 font-semibold shadow-md active:scale-95"
+                        >
+                          💬 WhatsApp Alert
+                        </a>
+                      </div>
                     </div>
                   ) : (
                     <p className="text-xs text-slate-500">Slot is currently empty.</p>
@@ -269,9 +340,24 @@ const Seats = () => {
                 </div>
 
                 {/* Evening Slot */}
-                <div className="bg-slate-950/40 border border-slate-800/80 p-4 rounded-xl">
+                <div className={`bg-slate-950/40 border p-4 rounded-xl transition-all duration-200 ${
+                  selectedSeat.evening?.isOccupied && selectedSeat.evening?.studentId?.isDue
+                    ? "border-red-500/40 shadow-[0_0_10px_rgba(239,68,68,0.15)] bg-red-950/5"
+                    : "border-slate-800/80"
+                }`}>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-sky-400">🌙 Evening Shift</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold uppercase tracking-wider text-sky-400">🌙 Evening Shift</span>
+                      {selectedSeat.evening?.isOccupied && selectedSeat.evening?.studentId?.isDue && (
+                        <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded border uppercase animate-pulse ${
+                          selectedSeat.evening.studentId.isExpired
+                            ? "bg-red-500/20 border-red-500/40 text-red-400"
+                            : "bg-amber-500/20 border-amber-500/40 text-amber-400"
+                        }`}>
+                          ⚠️ {selectedSeat.evening.studentId.isExpired ? "Plan Expired" : "Fees Due"}
+                        </span>
+                      )}
+                    </div>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                       selectedSeat.evening?.isOccupied
                         ? "bg-rose-500/10 border-rose-500/20 text-rose-400"
@@ -288,13 +374,35 @@ const Seats = () => {
                         <p><strong className="text-slate-400">Email:</strong> {selectedSeat.evening.studentId.email}</p>
                       )}
                       <p><strong className="text-slate-400">Plan:</strong> {selectedSeat.evening.studentId.plan}</p>
-                      <button
-                        disabled={actionLoading}
-                        onClick={() => handleReleaseStudent(selectedSeat.evening.studentId._id)}
-                        className="mt-2 bg-rose-500/15 border border-rose-500/35 hover:bg-rose-500/25 text-rose-400 font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 text-[10px]"
-                      >
-                        Release Student
-                      </button>
+                      {selectedSeat.evening.studentId.expiryDate && (
+                        <p>
+                          <strong className="text-slate-400">Expiry Date:</strong>{" "}
+                          <span className={selectedSeat.evening.studentId.isDue ? "text-rose-400 font-bold" : "text-slate-350"}>
+                            {new Date(selectedSeat.evening.studentId.expiryDate).toLocaleDateString("en-IN", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </span>
+                        </p>
+                      )}
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          disabled={actionLoading}
+                          onClick={() => handleReleaseStudent(selectedSeat.evening.studentId._id)}
+                          className="bg-rose-500/15 border border-rose-500/35 hover:bg-rose-500/25 text-rose-400 font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 text-[10px]"
+                        >
+                          Release Student
+                        </button>
+                        <a
+                          href={getWhatsAppLink(selectedSeat.evening.studentId)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center justify-center bg-emerald-650 hover:bg-emerald-600 border border-emerald-500/20 text-white text-[10px] px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 font-semibold shadow-md active:scale-95"
+                        >
+                          💬 WhatsApp Alert
+                        </a>
+                      </div>
                     </div>
                   ) : (
                     <p className="text-xs text-slate-500">Slot is currently empty.</p>
@@ -302,9 +410,24 @@ const Seats = () => {
                 </div>
 
                 {/* Full Day Slot */}
-                <div className="bg-slate-950/40 border border-slate-800/80 p-4 rounded-xl">
+                <div className={`bg-slate-950/40 border p-4 rounded-xl transition-all duration-200 ${
+                  selectedSeat.fullDay?.isOccupied && selectedSeat.fullDay?.studentId?.isDue
+                    ? "border-red-500/40 shadow-[0_0_10px_rgba(239,68,68,0.15)] bg-red-950/5"
+                    : "border-slate-800/80"
+                }`}>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-violet-400">📅 Full Day Shift</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold uppercase tracking-wider text-violet-400">📅 Full Day Shift</span>
+                      {selectedSeat.fullDay?.isOccupied && selectedSeat.fullDay?.studentId?.isDue && (
+                        <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded border uppercase animate-pulse ${
+                          selectedSeat.fullDay.studentId.isExpired
+                            ? "bg-red-500/20 border-red-500/40 text-red-400"
+                            : "bg-amber-500/20 border-amber-500/40 text-amber-400"
+                        }`}>
+                          ⚠️ {selectedSeat.fullDay.studentId.isExpired ? "Plan Expired" : "Fees Due"}
+                        </span>
+                      )}
+                    </div>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                       selectedSeat.fullDay?.isOccupied
                         ? "bg-rose-500/10 border-rose-500/20 text-rose-400"
@@ -321,13 +444,35 @@ const Seats = () => {
                         <p><strong className="text-slate-400">Email:</strong> {selectedSeat.fullDay.studentId.email}</p>
                       )}
                       <p><strong className="text-slate-400">Plan:</strong> {selectedSeat.fullDay.studentId.plan}</p>
-                      <button
-                        disabled={actionLoading}
-                        onClick={() => handleReleaseStudent(selectedSeat.fullDay.studentId._id)}
-                        className="mt-2 bg-rose-500/15 border border-rose-500/35 hover:bg-rose-500/25 text-rose-400 font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 text-[10px]"
-                      >
-                        Release Student
-                      </button>
+                      {selectedSeat.fullDay.studentId.expiryDate && (
+                        <p>
+                          <strong className="text-slate-400">Expiry Date:</strong>{" "}
+                          <span className={selectedSeat.fullDay.studentId.isDue ? "text-rose-400 font-bold" : "text-slate-350"}>
+                            {new Date(selectedSeat.fullDay.studentId.expiryDate).toLocaleDateString("en-IN", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </span>
+                        </p>
+                      )}
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          disabled={actionLoading}
+                          onClick={() => handleReleaseStudent(selectedSeat.fullDay.studentId._id)}
+                          className="bg-rose-500/15 border border-rose-500/35 hover:bg-rose-500/25 text-rose-400 font-bold px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 text-[10px]"
+                        >
+                          Release Student
+                        </button>
+                        <a
+                          href={getWhatsAppLink(selectedSeat.fullDay.studentId)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center justify-center bg-emerald-650 hover:bg-emerald-600 border border-emerald-500/20 text-white text-[10px] px-3 py-1.5 rounded-md cursor-pointer transition-all duration-200 font-semibold shadow-md active:scale-95"
+                        >
+                          💬 WhatsApp Alert
+                        </a>
+                      </div>
                     </div>
                   ) : (
                     <p className="text-xs text-slate-500">Slot is currently empty.</p>
