@@ -150,18 +150,37 @@ const Landing = () => {
         </p>
 
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link
-            to={user ? "/dashboard" : "/register"}
-            className="w-full sm:w-auto px-8 py-4 bg-linear-to-r from-indigo-500 via-violet-500 to-pink-500 hover:opacity-95 text-white font-bold rounded-xl shadow-xl shadow-indigo-500/20 transition-all duration-200 transform hover:scale-[1.01] text-center"
-          >
-            {user ? "Go to Dashboard" : "Start Your Free Trial Now"}
-          </Link>
-          <a
-            href="#demo"
-            className="w-full sm:w-auto px-8 py-4 bg-slate-900/60 border border-slate-800 hover:bg-slate-800 text-slate-200 font-semibold rounded-xl transition-all duration-200 text-center"
-          >
-            Try Seating Demo 🎯
-          </a>
+          {user ? (
+            <>
+              <Link
+                to="/dashboard"
+                className="w-full sm:w-auto px-8 py-4 bg-linear-to-r from-indigo-500 via-violet-500 to-pink-500 hover:opacity-95 text-white font-bold rounded-xl shadow-xl shadow-indigo-500/20 transition-all duration-200 transform hover:scale-[1.01] text-center"
+              >
+                Go to Dashboard ➔
+              </Link>
+              <Link
+                to="/dashboard"
+                className="w-full sm:w-auto px-8 py-4 bg-slate-900/60 border border-slate-800 hover:bg-slate-800 text-slate-200 font-semibold rounded-xl transition-all duration-200 text-center"
+              >
+                Open Seating Grid 💻
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/register"
+                className="w-full sm:w-auto px-8 py-4 bg-linear-to-r from-indigo-500 via-violet-500 to-pink-500 hover:opacity-95 text-white font-bold rounded-xl shadow-xl shadow-indigo-500/20 transition-all duration-200 transform hover:scale-[1.01] text-center"
+              >
+                Start Your Free Trial Now
+              </Link>
+              <a
+                href="#demo"
+                className="w-full sm:w-auto px-8 py-4 bg-slate-900/60 border border-slate-800 hover:bg-slate-800 text-slate-200 font-semibold rounded-xl transition-all duration-200 text-center"
+              >
+                Try Seating Demo 🎯
+              </a>
+            </>
+          )}
         </div>
 
         {/* Dashboard Glass Mockup */}
@@ -468,10 +487,10 @@ const Landing = () => {
 
               <div className="mt-8">
                 <Link
-                  to={user ? "/subscription" : "/register"}
+                  to={user ? "/dashboard" : "/register"}
                   className="block text-center w-full py-3 bg-linear-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/25"
                 >
-                  {user ? "Upgrade Membership" : "Get Premium Access"}
+                  {user ? "Go to Dashboard" : "Get Premium Access"}
                 </Link>
               </div>
             </div>
