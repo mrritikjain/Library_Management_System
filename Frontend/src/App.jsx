@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Register from "./Pages/Register";
 import Login from "./Pages/Login";
+import Landing from "./Pages/Landing";
 import Dashboard from "./Pages/Dashboard";
 import Seats from "./Pages/Seats";
 import Students from "./Pages/Students";
@@ -19,7 +20,8 @@ const App = () => {
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
         <Routes>
           {/* Public routes */}
-          <Route path="/" element={<Login />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/subscription" element={<Subscription />} />
 
