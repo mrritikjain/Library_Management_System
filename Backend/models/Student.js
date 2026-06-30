@@ -46,4 +46,6 @@ const StudentSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
+StudentSchema.index({ createdBy: 1 });
+
 export default mongoose.model("Student", StudentSchema);

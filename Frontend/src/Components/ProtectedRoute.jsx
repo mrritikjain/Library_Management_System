@@ -22,7 +22,7 @@ export const ProtectedRoute = ({ element: Element }) => {
           return;
         }
 
-        const trialDuration = 15 * 24 * 60 * 60 * 1000; // 15 days in ms
+        const trialDuration = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
         const registrationTime = new Date(user.createdAt).getTime();
         const isTrialValid = (Date.now() - registrationTime) <= trialDuration;
 

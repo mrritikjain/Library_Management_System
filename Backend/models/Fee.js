@@ -34,4 +34,7 @@ const FeeSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
+FeeSchema.index({ createdBy: 1 });
+FeeSchema.index({ studentId: 1, paymentDate: -1 });
+
 export default mongoose.model("Fee", FeeSchema);

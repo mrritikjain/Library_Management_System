@@ -45,4 +45,6 @@ const SeatSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
+SeatSchema.index({ createdBy: 1, seatNumber: 1 });
+
 export default mongoose.model("seat", SeatSchema);

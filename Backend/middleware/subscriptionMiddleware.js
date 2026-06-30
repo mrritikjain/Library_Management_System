@@ -12,8 +12,8 @@ export const checkSubscription = async (req, res, next) => {
       return next();
     }
 
-    // Check if the 15-day trial is still active
-    const trialDuration = 15 * 24 * 60 * 60 * 1000; // 15 days in milliseconds
+    // Check if the 7-day trial is still active
+    const trialDuration = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
     const registrationTime = new Date(user.createdAt).getTime();
     const isTrialValid = (Date.now() - registrationTime) <= trialDuration;
 

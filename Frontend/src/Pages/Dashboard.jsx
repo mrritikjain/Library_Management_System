@@ -82,7 +82,7 @@ const Dashboard = () => {
         </div>
       );
     } else {
-      const trialDuration = 15 * 24 * 60 * 60 * 1000; // 15 days
+      const trialDuration = 7 * 24 * 60 * 60 * 1000; // 7 days
       const elapsed = Date.now() - new Date(user.createdAt).getTime();
       const trialDaysRemaining = Math.max(0, Math.ceil((trialDuration - elapsed) / (24 * 60 * 60 * 1000)));
       return (

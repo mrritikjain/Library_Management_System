@@ -60,12 +60,12 @@ const Landing = () => {
 
   const faqs = [
     {
-      q: "How does the 15-day free trial work?",
-      a: "When you register your library, you automatically start on our 15-day free trial. There are no restrictions—you get access to all features including interactive seating plans, fee collections, expense trackers, and reports. After 15 days, you can choose to subscribe to our Premium Plan to keep accessing the system.",
+      q: "How does the 7-day free trial work?",
+      a: "When you register your library, you automatically start on our 7-day free trial. There are no restrictions—you get access to all features including interactive seating plans, fee collections, expense trackers, and reports. After 7 days, you can choose to subscribe to our Premium Plan to keep accessing the system.",
     },
     {
       q: "What is included in the Premium Annual Plan?",
-      a: "The Premium Annual Plan costs ₹3,000 per year and gives you 1 year of unlimited access to manage your library. It includes customizable seating configurations, digital fee collection receipts, complete income/expense ledgers, automatic system notifications, priority support on WhatsApp/Email, and regular updates.",
+      a: "The Premium Annual Plan costs ₹2,999 per year (normally ₹6,999) and gives you 1 year of unlimited access to manage your library. It includes customizable seating configurations, digital fee collection receipts, complete income/expense ledgers, automatic system notifications, priority support on WhatsApp/Email, and regular updates.",
     },
     {
       q: "How is payment verified for the Premium plan?",
@@ -132,11 +132,12 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
+      <main>
+        {/* Hero Section */}
       <section className="relative pt-20 pb-16 px-4 sm:px-6 lg:px-8 text-center max-w-5xl mx-auto z-10">
         {/* Promotion tag */}
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 mb-6 animate-pulse">
-          🚀 15-Day Free Trial Available • No Credit Card Required
+          🚀 7-Day Free Trial Available • No Credit Card Required
         </div>
 
         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-tight">
@@ -403,7 +404,7 @@ const Landing = () => {
               Simple, Transparent Pricing Plan
             </h2>
             <p className="mt-4 text-slate-400 max-w-lg mx-auto">
-              Start management operations with a 15-day free trial. Upgrade to premium for annual access.
+              Start management operations with a 7-day free trial. Upgrade to premium for annual access.
             </p>
           </div>
 
@@ -412,14 +413,14 @@ const Landing = () => {
             <div className="bg-slate-900/30 border border-slate-800 p-8 rounded-2xl flex flex-col justify-between hover:border-slate-800 transition-all duration-300">
               <div>
                 <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-bold text-slate-200">15-Day Free Trial</h3>
+                  <h3 className="text-xl font-bold text-slate-200">7-Day Free Trial</h3>
                   <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 bg-slate-900 border border-slate-800 px-2.5 py-0.5 rounded-full">Trial</span>
                 </div>
                 <p className="text-sm text-slate-400 mt-2">Perfect for evaluation and onboarding.</p>
                 
                 <div className="my-6">
                   <span className="text-4xl font-extrabold text-white">₹0</span>
-                  <span className="text-slate-400 text-sm"> / 15 days</span>
+                  <span className="text-slate-400 text-sm"> / 7 days</span>
                 </div>
 
                 <ul className="space-y-3 text-sm text-slate-300 border-t border-slate-900 pt-6">
@@ -461,9 +462,16 @@ const Landing = () => {
                 </div>
                 <p className="text-sm text-indigo-350 mt-2">Unlimited operations and premium security console.</p>
                 
-                <div className="my-6">
-                  <span className="text-4xl font-extrabold text-white">₹3,000</span>
-                  <span className="text-slate-400 text-sm"> / year</span>
+                <div className="my-6 flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 line-through text-xs font-semibold">₹6,999</span>
+                    <span className="text-xs text-emerald-400 font-extrabold bg-emerald-500/10 px-2 py-0.5 rounded-md">57% OFF</span>
+                  </div>
+                  <div>
+                    <span className="text-4xl font-black text-white">₹2,999</span>
+                    <span className="text-slate-400 text-sm"> / year</span>
+                  </div>
+                  <span className="text-[11px] text-indigo-300 font-medium">✨ Lock in this launch discount today!</span>
                 </div>
 
                 <ul className="space-y-3 text-sm text-slate-300 border-t border-slate-800 pt-6">
@@ -562,6 +570,8 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      </main>
 
       {/* Footer */}
       <footer className="mt-auto py-8 bg-slate-950 border-t border-slate-900 text-center text-xs text-slate-500 relative z-10">

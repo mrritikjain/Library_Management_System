@@ -123,7 +123,7 @@ export const userDetails = async (req, res) => {
             user.subscriptionStatus = "Expired";
             updated = true;
         } else if (user.subscriptionStatus === "Trial") {
-            const trialPeriod = 15 * 24 * 60 * 60 * 1000; // 15 days
+            const trialPeriod = 7 * 24 * 60 * 60 * 1000; // 7 days
             const registrationTime = new Date(user.createdAt).getTime();
             if (Date.now() - registrationTime > trialPeriod) {
                 user.subscriptionStatus = "Expired";

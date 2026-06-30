@@ -124,7 +124,7 @@ const Subscription = () => {
   }
 
   // Calculate Trial Remaining
-  const trialDuration = 15 * 24 * 60 * 60 * 1000; // 15 days in ms
+  const trialDuration = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
   const elapsed = Date.now() - new Date(user.createdAt).getTime();
   const trialDaysRemaining = Math.max(0, Math.ceil((trialDuration - elapsed) / (24 * 60 * 60 * 1000)));
   const isTrialActive = elapsed <= trialDuration && user.subscriptionStatus === "Trial";
@@ -187,7 +187,7 @@ const Subscription = () => {
 
         {user.subscriptionStatus === "Expired" && !isTrialActive && (
           <div className="mb-6 p-4 bg-rose-500/15 border border-rose-500/25 text-rose-400 rounded-xl text-center font-semibold text-sm">
-            <p>🚫 Trial / Subscription Expired: Access is locked. Please send UPI payment of ₹3,000 and submit verification details below.</p>
+            <p>🚫 Trial / Subscription Expired: Access is locked. Please send UPI payment of ₹2,999 and submit verification details below.</p>
             <p className="text-xs mt-2 text-slate-300 font-medium">Once submitted, your subscription will be activated within 1-2 hours. For support, email <a href="mailto:jainritik0021@gmail.com" className="text-indigo-400 underline">jainritik0021@gmail.com</a> or WhatsApp at <a href="https://wa.me/918386835945" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline">+91 8386835945</a>.</p>
           </div>
         )}
@@ -207,7 +207,7 @@ const Subscription = () => {
             
             {/* QR Card with Premium design */}
             <div className="relative p-4 rounded-2xl bg-white border border-slate-100 shadow-2xl mb-5 w-56 h-56 flex items-center justify-center group/qr overflow-hidden">
-              <img src="/qr_code.png" alt="Payment QR Code" className="w-full h-full object-contain relative z-10 transition-transform duration-300 group-hover/qr:scale-[1.02]" />
+              <img src="/qr_code.png" alt="Payment QR Code" loading="lazy" className="w-full h-full object-contain relative z-10 transition-transform duration-300 group-hover/qr:scale-[1.02]" />
               
               {/* Scan Line effect */}
               <div className="absolute left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-indigo-500 to-transparent shadow-[0_0_8px_rgba(99,102,241,0.8)] z-20 animate-scan-line pointer-events-none" />
@@ -228,7 +228,11 @@ const Subscription = () => {
               </div>
               <div className="flex justify-between items-center text-xs sm:text-sm">
                 <span className="text-slate-400">Plan Amount</span>
-                <span className="font-bold text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-full text-xs">₹ 3,000 / year</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500 line-through text-xs">₹6,999</span>
+                  <span className="font-bold text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-full text-xs">₹2,999 / year</span>
+                  <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md font-extrabold uppercase">57% OFF</span>
+                </div>
               </div>
               
               {/* UPI ID Row with Interactive Copy Button */}

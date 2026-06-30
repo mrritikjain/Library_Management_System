@@ -82,20 +82,20 @@ export const getDashboardStats = async (req, res) => {
       }
     });
 
-    // 4. Calculate total fees collected
-    const feesAggregate = await Fee.aggregate([
-      { $match: { createdBy: new mongoose.Types.ObjectId(userID) } },
-      { $group: { _id: null, total: { $sum: "$amountPaid" } } }
+    // 4. & 5. Calculate total fees collected and total expenses in parallel
+    const [feesAggregate, expensesAggregate] = await Promise.all([
+      Fee.aggregate([
+        { $match: { createdBy: new mongoose.Types.ObjectId(userID) } },
+        { $group: { _id: null, total: { $sum: "$amountPaid" } } }
+      ]),
+      Expense.aggregate([
+        { $match: { createdBy: new mongoose.Types.ObjectId(userID) } },
+        { $group: { _id: null, total: { $sum: "$amount" } } }
+      ])
     ]);
+
     const feesCollected = feesAggregate.length > 0 ? feesAggregate[0].total : 0;
-
-    // 5. Calculate total expenses
-    const expensesAggregate = await Expense.aggregate([
-      { $match: { createdBy: new mongoose.Types.ObjectId(userID) } },
-      { $group: { _id: null, total: { $sum: "$amount" } } }
-    ]);
     const totalExpenses = expensesAggregate.length > 0 ? expensesAggregate[0].total : 0;
-
     const netProfit = feesCollected - totalExpenses;
 
     // 6. Fetch recent 5 students and determine their billing status
@@ -103,16 +103,28 @@ export const getDashboardStats = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(5);
 
-    const recentActivities = [];
-    for (const student of recentStudentsList) {
-      const studentFees = await Fee.find({ studentId: student._id }).sort({ paymentDate: -1 });
+    // Batch query all fees for the recent students to prevent N+1 loop query database calls
+    const recentStudentIds = recentStudentsList.map(s => s._id);
+    const recentStudentFeesList = await Fee.find({ studentId: { $in: recentStudentIds } }).sort({ paymentDate: -1 });
+
+    // Group fees by studentId in memory
+    const recentFeesMap = {};
+    recentStudentFeesList.forEach(fee => {
+      const sId = String(fee.studentId);
+      if (!recentFeesMap[sId]) {
+        recentFeesMap[sId] = [];
+      }
+      recentFeesMap[sId].push(fee);
+    });
+
+    const recentActivities = recentStudentsList.map(student => {
+      const studentFees = recentFeesMap[String(student._id)] || [];
       let status = "Paid";
       
       if (student.status === "Inactive") {
         status = "Inactive";
       } else {
         const planDays = getPlanDays(student.plan);
-        const joinDate = new Date(student.joiningDate || student.createdAt);
         if (studentFees.length === 0) {
           status = "Pending";
         } else {
@@ -134,14 +146,14 @@ export const getDashboardStats = async (req, res) => {
         }
       }
 
-      recentActivities.push({
+      return {
         _id: student._id,
         name: student.name,
         seat: student.seatNumber ? `Desk-${String(student.seatNumber).padStart(2, "0")}` : "Unassigned",
         plan: student.plan,
         status,
-      });
-    }
+      };
+    });
 
     res.status(200).json({
       success: true,
