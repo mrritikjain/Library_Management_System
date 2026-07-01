@@ -10,6 +10,8 @@ const sendSMS = async (mobile, text) => {
 // Helper to map plan names to days
 export const getPlanDays = (plan) => {
   switch (plan) {
+    case "Weekly": return 7;
+    case "15 Days": return 15;
     case "Monthly": return 30;
     case "Quarterly": return 90;
     case "Half-Yearly": return 180;

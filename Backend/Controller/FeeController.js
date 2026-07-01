@@ -22,12 +22,34 @@ export const createFee = async (req, res) => {
     if (!finalDueDate) {
       const plan = student.plan || "Monthly";
       let planDays = 30;
-      if (plan === "Quarterly") planDays = 90;
+      if (plan === "Weekly") planDays = 7;
+      else if (plan === "15 Days") planDays = 15;
+      else if (plan === "Quarterly") planDays = 90;
       else if (plan === "Half-Yearly") planDays = 180;
       else if (plan === "Yearly") planDays = 365;
 
       const pDate = paymentDate ? new Date(paymentDate) : new Date();
-      finalDueDate = new Date(pDate.getTime() + planDays * 24 * 60 * 60 * 1000);
+      
+      // Proportional calculation for installments/partial payments
+      const proportionalDays = student.feeAmount > 0
+        ? (Number(amountPaid) / student.feeAmount) * planDays
+        : planDays;
+
+      // Determine the start date of this payment coverage
+      const lastFee = await Fee.findOne({ studentId, createdBy }).sort({ paymentDate: -1 });
+      let startDate = pDate;
+      if (lastFee && lastFee.dueDate && new Date(pDate) < new Date(lastFee.dueDate)) {
+        // If the student's previous subscription hasn't expired yet, extend it
+        startDate = new Date(lastFee.dueDate);
+      } else if (!lastFee && student.joiningDate) {
+        // For old users registered with a backdated joiningDate
+        const joinDate = new Date(student.joiningDate);
+        if (joinDate < pDate) {
+          startDate = joinDate;
+        }
+      }
+
+      finalDueDate = new Date(startDate.getTime() + proportionalDays * 24 * 60 * 60 * 1000);
     }
 
     const fee = new Fee({

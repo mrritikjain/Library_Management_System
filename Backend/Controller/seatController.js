@@ -5,6 +5,8 @@ import jwt from "jsonwebtoken"; // 1. Import jwt to decode the token
 
 const getPlanDays = (plan) => {
   switch (plan) {
+    case "Weekly": return 7;
+    case "15 Days": return 15;
     case "Quarterly": return 90;
     case "Half-Yearly": return 180;
     case "Yearly": return 365;

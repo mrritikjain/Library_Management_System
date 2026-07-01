@@ -18,6 +18,7 @@ const Students = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -37,6 +38,8 @@ const Students = () => {
   const [paymentData, setPaymentData] = useState({
     amountPaid: "",
     paymentDate: new Date().toISOString().split("T")[0],
+    dueDate: "",
+    allocationMode: "backlog",
     paymentMode: "UPI",
     remarks: "",
   });
@@ -83,10 +86,77 @@ const Students = () => {
     }
   };
 
+  // Helper to map plan names to days
+  const getPlanDays = (planName) => {
+    switch (planName) {
+      case "Weekly": return 7;
+      case "15 Days": return 15;
+      case "Monthly": return 30;
+      case "Quarterly": return 90;
+      case "Half-Yearly": return 180;
+      case "Yearly": return 365;
+      default: return 30;
+    }
+  };
+
+  // Helper to dynamically compute proportional due date based on payment inputs
+  const updatePaymentDueDate = (amount, payDate, allocationMode, studentObj) => {
+    if (!studentObj) return "";
+    const paid = parseFloat(amount) || 0;
+    const plan = studentObj.plan || "Monthly";
+    const planDays = getPlanDays(plan);
+    const totalFee = studentObj.feeAmount || 1000;
+    const proportionalDays = totalFee > 0 ? (paid / totalFee) * planDays : planDays;
+
+    const basePayDate = payDate ? new Date(payDate) : new Date();
+    let startDate = basePayDate;
+    
+    // Check if we are covering the backlog or starting fresh
+    if (allocationMode === "backlog") {
+      if (studentObj.expiryDate) {
+        startDate = new Date(studentObj.expiryDate);
+      } else if (studentObj.joiningDate) {
+        startDate = new Date(studentObj.joiningDate);
+      }
+    }
+
+    const calculated = new Date(startDate.getTime() + proportionalDays * 24 * 60 * 60 * 1000);
+    return calculated.toISOString().split("T")[0];
+  };
+
+  // Helper to calculate student backlog stats
+  const getBacklogInfo = (studentObj, payDate) => {
+    if (!studentObj) return null;
+    const expiry = studentObj.expiryDate ? new Date(studentObj.expiryDate) : new Date(studentObj.joiningDate);
+    const today = payDate ? new Date(payDate) : new Date();
+    
+    // Normalize hours to compare calendar dates safely
+    const d1 = new Date(expiry.getFullYear(), expiry.getMonth(), expiry.getDate());
+    const d2 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    const diffTime = d2.getTime() - d1.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays > 0) {
+      const plan = studentObj.plan || "Monthly";
+      const planDays = getPlanDays(plan);
+      const totalFee = studentObj.feeAmount || 1000;
+      const backlogAmount = Math.round((diffDays / planDays) * totalFee);
+      return {
+        days: diffDays,
+        amount: backlogAmount,
+        expiryDateStr: expiry.toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "numeric" }),
+      };
+    }
+    return null;
+  };
+
   // Set default fee based on plan
   const handlePlanChange = (planName) => {
     let fee = 1000;
-    if (planName === "Quarterly") fee = 2800;
+    if (planName === "Weekly") fee = 250;
+    else if (planName === "15 Days") fee = 500;
+    else if (planName === "Quarterly") fee = 2800;
     else if (planName === "Half-Yearly") fee = 5200;
     else if (planName === "Yearly") fee = 10000;
     setFormData((prev) => ({ ...prev, plan: planName, feeAmount: fee }));
@@ -101,6 +171,8 @@ const Students = () => {
   // Submit Register Student
   const handleAddStudent = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const data = new FormData();
       data.append("name", formData.name);
@@ -128,12 +200,16 @@ const Students = () => {
       alert("Student registered successfully.");
     } catch (error) {
       alert(error.response?.data?.message || "Failed to register student.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // Submit Edit Student
   const handleEditStudent = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const data = new FormData();
       data.append("name", formData.name);
@@ -162,6 +238,8 @@ const Students = () => {
       alert("Student updated successfully.");
     } catch (error) {
       alert(error.response?.data?.message || "Failed to update student.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -184,6 +262,8 @@ const Students = () => {
   // Submit Payment Record
   const handleRecordPayment = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const payload = {
         studentId: selectedStudent._id,
@@ -199,12 +279,16 @@ const Students = () => {
       setPaymentData({
         amountPaid: "",
         paymentDate: new Date().toISOString().split("T")[0],
+        dueDate: "",
         paymentMode: "UPI",
         remarks: "",
       });
+      await fetchData(); // Crucial: Refresh table records to update Expiration UI badges!
       alert("Fee payment recorded successfully.");
     } catch (error) {
       alert("Failed to record fee payment.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -227,7 +311,18 @@ const Students = () => {
 
   const openPaymentModal = (student) => {
     setSelectedStudent(student);
-    setPaymentData((prev) => ({ ...prev, amountPaid: student.feeAmount }));
+    const amount = student.feeAmount;
+    const today = new Date().toISOString().split("T")[0];
+    const computedDueDate = updatePaymentDueDate(amount, today, "backlog", student);
+
+    setPaymentData({
+      amountPaid: amount,
+      paymentDate: today,
+      dueDate: computedDueDate,
+      allocationMode: "backlog",
+      paymentMode: "UPI",
+      remarks: "",
+    });
     setIsPaymentModalOpen(true);
   };
 
@@ -520,6 +615,8 @@ const Students = () => {
                     onChange={(e) => handlePlanChange(e.target.value)}
                     className="w-full bg-slate-950/65 border border-slate-850 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500 cursor-pointer"
                   >
+                    <option value="Weekly">Weekly</option>
+                    <option value="15 Days">15 Days</option>
                     <option value="Monthly">Monthly</option>
                     <option value="Quarterly">Quarterly</option>
                     <option value="Half-Yearly">Half-Yearly</option>
@@ -619,9 +716,10 @@ const Students = () => {
                 </button>
                 <button
                   type="submit"
-                  className="bg-linear-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white px-5 py-2 rounded-lg text-sm font-semibold cursor-pointer"
+                  disabled={isSubmitting}
+                  className="bg-linear-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white px-5 py-2 rounded-lg text-sm font-semibold cursor-pointer disabled:opacity-50"
                 >
-                  {isAddModalOpen ? "Register" : "Save Changes"}
+                  {isSubmitting ? (isAddModalOpen ? "Registering..." : "Saving...") : (isAddModalOpen ? "Register" : "Save Changes")}
                 </button>
               </div>
             </form>
@@ -647,7 +745,14 @@ const Students = () => {
                   type="number"
                   required
                   value={paymentData.amountPaid}
-                  onChange={(e) => setPaymentData((prev) => ({ ...prev, amountPaid: e.target.value }))}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setPaymentData((prev) => ({
+                      ...prev,
+                      amountPaid: val,
+                      dueDate: updatePaymentDueDate(val, prev.paymentDate, prev.allocationMode, selectedStudent),
+                    }));
+                  }}
                   className="w-full bg-slate-950/65 border border-slate-850 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
                 />
               </div>
@@ -658,10 +763,83 @@ const Students = () => {
                   type="date"
                   required
                   value={paymentData.paymentDate}
-                  onChange={(e) => setPaymentData((prev) => ({ ...prev, paymentDate: e.target.value }))}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setPaymentData((prev) => ({
+                      ...prev,
+                      paymentDate: val,
+                      dueDate: updatePaymentDueDate(prev.amountPaid, val, prev.allocationMode, selectedStudent),
+                    }));
+                  }}
                   className="w-full bg-slate-950/65 border border-slate-850 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
                 />
               </div>
+
+              {getBacklogInfo(selectedStudent, paymentData.paymentDate) && (
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-xs text-amber-300 space-y-2">
+                  <div className="flex items-center gap-1.5 font-bold">
+                    <span>⚠️</span>
+                    <span>Backlog Dues Detected</span>
+                  </div>
+                  <p className="text-slate-400">
+                    This student's subscription expired on <strong className="text-slate-200">{getBacklogInfo(selectedStudent, paymentData.paymentDate).expiryDateStr}</strong> ({getBacklogInfo(selectedStudent, paymentData.paymentDate).days} days ago).
+                  </p>
+                  <p className="text-slate-400">
+                    Calculated backlog dues: <strong className="text-amber-400">₹{getBacklogInfo(selectedStudent, paymentData.paymentDate).amount.toLocaleString()}</strong>.
+                  </p>
+                  
+                  <div className="pt-2 border-t border-amber-500/10 space-y-2">
+                    <label className="block text-[10px] font-bold uppercase text-slate-400 tracking-wider">Fee Allocation Mode</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className={`flex flex-col p-2.5 rounded-lg border cursor-pointer transition-all ${
+                        paymentData.allocationMode === "backlog"
+                          ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-300"
+                          : "bg-slate-950/40 border-slate-850 text-slate-400 hover:border-slate-800"
+                      }`}>
+                        <input
+                          type="radio"
+                          name="allocationMode"
+                          value="backlog"
+                          checked={paymentData.allocationMode === "backlog"}
+                          onChange={() => {
+                            setPaymentData((prev) => ({
+                              ...prev,
+                              allocationMode: "backlog",
+                              dueDate: updatePaymentDueDate(prev.amountPaid, prev.paymentDate, "backlog", selectedStudent),
+                            }));
+                          }}
+                          className="sr-only"
+                        />
+                        <span className="font-bold text-[11px]">Cover Backlog</span>
+                        <span className="text-[9px] text-slate-500 mt-0.5">Extend from previous expiry</span>
+                      </label>
+
+                      <label className={`flex flex-col p-2.5 rounded-lg border cursor-pointer transition-all ${
+                        paymentData.allocationMode === "fresh"
+                          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                          : "bg-slate-950/40 border-slate-850 text-slate-400 hover:border-slate-800"
+                      }`}>
+                        <input
+                          type="radio"
+                          name="allocationMode"
+                          value="fresh"
+                          checked={paymentData.allocationMode === "fresh"}
+                          onChange={() => {
+                            setPaymentData((prev) => ({
+                              ...prev,
+                              allocationMode: "fresh",
+                              dueDate: updatePaymentDueDate(prev.amountPaid, prev.paymentDate, "fresh", selectedStudent),
+                            }));
+                          }}
+                          className="sr-only"
+                        />
+                        <span className="font-bold text-[11px]">Start Fresh</span>
+                        <span className="text-[9px] text-slate-500 mt-0.5">Forgive dues, start from today</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Payment Mode</label>
@@ -675,6 +853,17 @@ const Students = () => {
                   <option value="Card">Card</option>
                   <option value="NetBanking">Net Banking</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Due Date / Expiry Date (Manual Override)</label>
+                <input
+                  type="date"
+                  required
+                  value={paymentData.dueDate}
+                  onChange={(e) => setPaymentData((prev) => ({ ...prev, dueDate: e.target.value }))}
+                  className="w-full bg-slate-950/65 border border-slate-850 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
+                />
               </div>
 
               <div>
@@ -701,9 +890,10 @@ const Students = () => {
                 </button>
                 <button
                   type="submit"
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg text-sm font-semibold cursor-pointer"
+                  disabled={isSubmitting}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg text-sm font-semibold cursor-pointer disabled:opacity-50"
                 >
-                  Confirm Payment
+                  {isSubmitting ? "Processing..." : "Confirm Payment"}
                 </button>
               </div>
             </form>

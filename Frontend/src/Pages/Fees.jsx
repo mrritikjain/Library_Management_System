@@ -11,10 +11,14 @@ const Fees = () => {
 
   // Modals & Form
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
+  const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     studentId: "",
     amountPaid: "",
     paymentDate: new Date().toISOString().split("T")[0],
+    dueDate: "",
+    allocationMode: "backlog",
     paymentMode: "UPI",
     remarks: "",
   });
@@ -61,9 +65,76 @@ const Fees = () => {
     }
   };
 
+  // Helper to map plan names to days
+  const getPlanDays = (planName) => {
+    switch (planName) {
+      case "Weekly": return 7;
+      case "15 Days": return 15;
+      case "Monthly": return 30;
+      case "Quarterly": return 90;
+      case "Half-Yearly": return 180;
+      case "Yearly": return 365;
+      default: return 30;
+    }
+  };
+
+  // Helper to dynamically compute proportional due date based on payment inputs
+  const updatePaymentDueDate = (amount, payDate, allocationMode, studentObj) => {
+    if (!studentObj) return "";
+    const paid = parseFloat(amount) || 0;
+    const plan = studentObj.plan || "Monthly";
+    const planDays = getPlanDays(plan);
+    const totalFee = studentObj.feeAmount || 1000;
+    const proportionalDays = totalFee > 0 ? (paid / totalFee) * planDays : planDays;
+
+    const basePayDate = payDate ? new Date(payDate) : new Date();
+    let startDate = basePayDate;
+    
+    // Check if we are covering the backlog or starting fresh
+    if (allocationMode === "backlog") {
+      if (studentObj.expiryDate) {
+        startDate = new Date(studentObj.expiryDate);
+      } else if (studentObj.joiningDate) {
+        startDate = new Date(studentObj.joiningDate);
+      }
+    }
+
+    const calculated = new Date(startDate.getTime() + proportionalDays * 24 * 60 * 60 * 1000);
+    return calculated.toISOString().split("T")[0];
+  };
+
+  // Helper to calculate student backlog stats
+  const getBacklogInfo = (studentObj, payDate) => {
+    if (!studentObj) return null;
+    const expiry = studentObj.expiryDate ? new Date(studentObj.expiryDate) : new Date(studentObj.joiningDate);
+    const today = payDate ? new Date(payDate) : new Date();
+    
+    // Normalize hours to compare calendar dates safely
+    const d1 = new Date(expiry.getFullYear(), expiry.getMonth(), expiry.getDate());
+    const d2 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    const diffTime = d2.getTime() - d1.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays > 0) {
+      const plan = studentObj.plan || "Monthly";
+      const planDays = getPlanDays(plan);
+      const totalFee = studentObj.feeAmount || 1000;
+      const backlogAmount = Math.round((diffDays / planDays) * totalFee);
+      return {
+        days: diffDays,
+        amount: backlogAmount,
+        expiryDateStr: expiry.toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "numeric" }),
+      };
+    }
+    return null;
+  };
+
   // Submit recorded payment
   const handleRecordPayment = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       await axios.post(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/fees/record`, formData, {
         withCredentials: true,
@@ -74,6 +145,8 @@ const Fees = () => {
         studentId: "",
         amountPaid: "",
         paymentDate: new Date().toISOString().split("T")[0],
+        dueDate: "",
+        allocationMode: "backlog",
         paymentMode: "UPI",
         remarks: "",
       });
@@ -81,7 +154,63 @@ const Fees = () => {
       alert("Payment recorded successfully.");
     } catch (error) {
       alert(error.response?.data?.message || "Failed to record payment.");
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  // Export CSV helper
+  const handleExportCSV = (range) => {
+    let filteredFees = [...fees];
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth(); // 0-indexed
+
+    if (range === "this_month") {
+      filteredFees = fees.filter((fee) => {
+        const d = new Date(fee.paymentDate);
+        return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
+      });
+    } else if (range === "last_month") {
+      const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+      const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+      filteredFees = fees.filter((fee) => {
+        const d = new Date(fee.paymentDate);
+        return d.getFullYear() === prevYear && d.getMonth() === prevMonth;
+      });
+    } else if (range === "this_year") {
+      filteredFees = fees.filter((fee) => {
+        const d = new Date(fee.paymentDate);
+        return d.getFullYear() === currentYear;
+      });
+    }
+
+    const headers = ["Student Name", "Mobile", "Plan", "Amount Paid", "Payment Date", "Due Date", "Payment Mode", "Remarks"];
+    const rows = filteredFees.map((fee) => [
+      fee.studentId ? fee.studentId.name : "Deleted Student",
+      fee.studentId ? fee.studentId.mobile : "—",
+      fee.studentId ? fee.studentId.plan : "—",
+      fee.amountPaid,
+      new Date(fee.paymentDate).toISOString().split("T")[0],
+      fee.dueDate ? new Date(fee.dueDate).toISOString().split("T")[0] : "—",
+      fee.paymentMode,
+      (fee.remarks || "").replace(/"/g, '""'),
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) => row.map((val) => `"${val}"`).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `fees_report_${range}_${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Delete payment record
@@ -103,10 +232,15 @@ const Fees = () => {
   // Populate student standard fee on dropdown select
   const handleStudentSelect = (studentId) => {
     const student = students.find((s) => s._id === studentId);
+    const amount = student ? student.feeAmount : "";
+    const computedDueDate = student ? updatePaymentDueDate(amount, formData.paymentDate, "backlog", student) : "";
+    
     setFormData((prev) => ({
       ...prev,
       studentId,
-      amountPaid: student ? student.feeAmount : "",
+      amountPaid: amount,
+      dueDate: computedDueDate,
+      allocationMode: "backlog",
     }));
   };
 
@@ -144,12 +278,64 @@ const Fees = () => {
                 Track library subscription billing history, payments, and financial ledgers.
               </p>
             </div>
-            <button
-              onClick={() => setIsRecordModalOpen(true)}
-              className="cursor-pointer bg-linear-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-semibold text-sm px-4 py-2.5 rounded-lg transition-all duration-200 active:scale-[0.98] shadow-lg shadow-indigo-500/15 text-center"
-            >
-              💵 Record Payment
-            </button>
+            <div className="flex flex-wrap sm:flex-nowrap gap-3 items-center">
+              {/* Export Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsExportDropdownOpen(!isExportDropdownOpen)}
+                  className="cursor-pointer bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-205 font-semibold text-sm px-4 py-2.5 rounded-lg transition-all duration-200 active:scale-[0.98] flex items-center gap-2"
+                >
+                  📥 Export Ledger <span className="text-[10px] text-slate-500">▼</span>
+                </button>
+                {isExportDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 py-1 overflow-hidden backdrop-blur-xl">
+                    <button
+                      onClick={() => {
+                        handleExportCSV("this_month");
+                        setIsExportDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-xs text-slate-300 hover:bg-indigo-600 hover:text-white transition-colors cursor-pointer"
+                    >
+                      📅 This Month's Collections
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleExportCSV("last_month");
+                        setIsExportDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-xs text-slate-300 hover:bg-indigo-600 hover:text-white transition-colors cursor-pointer"
+                    >
+                      📅 Last Month's Collections
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleExportCSV("this_year");
+                        setIsExportDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-xs text-slate-300 hover:bg-indigo-600 hover:text-white transition-colors cursor-pointer"
+                    >
+                      🗓️ This Year's Collections
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleExportCSV("all");
+                        setIsExportDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-xs text-slate-300 hover:bg-indigo-600 hover:text-white transition-colors cursor-pointer"
+                    >
+                      📊 All-Time Collections
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => setIsRecordModalOpen(true)}
+                className="cursor-pointer bg-linear-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-semibold text-sm px-4 py-2.5 rounded-lg transition-all duration-200 active:scale-[0.98] shadow-lg shadow-indigo-500/15 text-center"
+              >
+                💵 Record Payment
+              </button>
+            </div>
           </div>
 
           {/* Quick Stats Panel */}
@@ -269,7 +455,15 @@ const Fees = () => {
                   type="number"
                   required
                   value={formData.amountPaid}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, amountPaid: e.target.value }))}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const student = students.find((s) => s._id === formData.studentId);
+                    setFormData((prev) => ({
+                      ...prev,
+                      amountPaid: val,
+                      dueDate: student ? updatePaymentDueDate(val, prev.paymentDate, prev.allocationMode, student) : prev.dueDate,
+                    }));
+                  }}
                   className="w-full bg-slate-950/65 border border-slate-850 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
                 />
               </div>
@@ -280,10 +474,86 @@ const Fees = () => {
                   type="date"
                   required
                   value={formData.paymentDate}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, paymentDate: e.target.value }))}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const student = students.find((s) => s._id === formData.studentId);
+                    setFormData((prev) => ({
+                      ...prev,
+                      paymentDate: val,
+                      dueDate: student ? updatePaymentDueDate(prev.amountPaid, val, prev.allocationMode, student) : prev.dueDate,
+                    }));
+                  }}
                   className="w-full bg-slate-950/65 border border-slate-850 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
                 />
               </div>
+
+              {formData.studentId && students.find((s) => s._id === formData.studentId) && getBacklogInfo(students.find((s) => s._id === formData.studentId), formData.paymentDate) && (
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-xs text-amber-300 space-y-2">
+                  <div className="flex items-center gap-1.5 font-bold">
+                    <span>⚠️</span>
+                    <span>Backlog Dues Detected</span>
+                  </div>
+                  <p className="text-slate-400">
+                    This student's subscription expired on <strong className="text-slate-200">{getBacklogInfo(students.find((s) => s._id === formData.studentId), formData.paymentDate).expiryDateStr}</strong> ({getBacklogInfo(students.find((s) => s._id === formData.studentId), formData.paymentDate).days} days ago).
+                  </p>
+                  <p className="text-slate-400">
+                    Calculated backlog dues: <strong className="text-amber-400">₹{getBacklogInfo(students.find((s) => s._id === formData.studentId), formData.paymentDate).amount.toLocaleString()}</strong>.
+                  </p>
+                  
+                  <div className="pt-2 border-t border-amber-500/10 space-y-2">
+                    <label className="block text-[10px] font-bold uppercase text-slate-400 tracking-wider">Fee Allocation Mode</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className={`flex flex-col p-2.5 rounded-lg border cursor-pointer transition-all ${
+                        formData.allocationMode === "backlog"
+                          ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-300"
+                          : "bg-slate-950/40 border-slate-850 text-slate-400 hover:border-slate-800"
+                      }`}>
+                        <input
+                          type="radio"
+                          name="allocationMode"
+                          value="backlog"
+                          checked={formData.allocationMode === "backlog"}
+                          onChange={() => {
+                            const student = students.find((s) => s._id === formData.studentId);
+                            setFormData((prev) => ({
+                              ...prev,
+                              allocationMode: "backlog",
+                              dueDate: student ? updatePaymentDueDate(prev.amountPaid, prev.paymentDate, "backlog", student) : prev.dueDate,
+                            }));
+                          }}
+                          className="sr-only"
+                        />
+                        <span className="font-bold text-[11px]">Cover Backlog</span>
+                        <span className="text-[9px] text-slate-500 mt-0.5">Extend from previous expiry</span>
+                      </label>
+
+                      <label className={`flex flex-col p-2.5 rounded-lg border cursor-pointer transition-all ${
+                        formData.allocationMode === "fresh"
+                          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                          : "bg-slate-950/40 border-slate-850 text-slate-400 hover:border-slate-800"
+                      }`}>
+                        <input
+                          type="radio"
+                          name="allocationMode"
+                          value="fresh"
+                          checked={formData.allocationMode === "fresh"}
+                          onChange={() => {
+                            const student = students.find((s) => s._id === formData.studentId);
+                            setFormData((prev) => ({
+                              ...prev,
+                              allocationMode: "fresh",
+                              dueDate: student ? updatePaymentDueDate(prev.amountPaid, prev.paymentDate, "fresh", student) : prev.dueDate,
+                            }));
+                          }}
+                          className="sr-only"
+                        />
+                        <span className="font-bold text-[11px]">Start Fresh</span>
+                        <span className="text-[9px] text-slate-500 mt-0.5">Forgive dues, start from today</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Payment Mode</label>
@@ -297,6 +567,17 @@ const Fees = () => {
                   <option value="Card">Card</option>
                   <option value="NetBanking">Net Banking</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Due Date / Expiry Date (Manual Override)</label>
+                <input
+                  type="date"
+                  required
+                  value={formData.dueDate}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, dueDate: e.target.value }))}
+                  className="w-full bg-slate-950/65 border border-slate-850 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
+                />
               </div>
 
               <div>
@@ -320,9 +601,10 @@ const Fees = () => {
                 </button>
                 <button
                   type="submit"
-                  className="bg-indigo-500 hover:bg-indigo-400 text-white px-5 py-2 rounded-lg text-sm font-semibold cursor-pointer"
+                  disabled={isSubmitting}
+                  className="bg-indigo-500 hover:bg-indigo-400 text-white px-5 py-2 rounded-lg text-sm font-semibold cursor-pointer disabled:opacity-50"
                 >
-                  Confirm Entry
+                  {isSubmitting ? "Saving Entry..." : "Confirm Entry"}
                 </button>
               </div>
             </form>
