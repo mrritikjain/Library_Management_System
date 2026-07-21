@@ -542,17 +542,19 @@ const Students = () => {
                           </span>
                         </td>
                         <td className="py-4 px-4 text-right space-x-2">
-                          <button
-                            onClick={() => openPaymentModal(student)}
-                            className={`text-xs px-2.5 py-1.5 rounded-md cursor-pointer transition-all ${
-                              student.isDue
-                                ? "bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-md shadow-emerald-600/20"
-                                : "bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20"
-                            }`}
-                            title="Record Payment"
-                          >
-                            💵 Pay
-                          </button>
+                          {student.status === "Active" && !student.isDue ? (
+                            <span className="inline-block bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold px-3 py-1.5 rounded-md">
+                              ✓ Paid
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => openPaymentModal(student)}
+                              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-2.5 py-1.5 rounded-md cursor-pointer transition-all shadow-md shadow-emerald-600/20"
+                              title="Record Payment"
+                            >
+                              💵 Pay
+                            </button>
+                          )}
                           <button
                             onClick={() => openEditModal(student)}
                             className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-2.5 py-1.5 rounded-md cursor-pointer transition-colors"
@@ -706,7 +708,7 @@ const Students = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className={isAddModalOpen ? "col-span-2" : "col-span-1"}>
                   <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Joining Date</label>
                   <input
                     type="date"
