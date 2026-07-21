@@ -24,6 +24,7 @@ const Students = () => {
   const [formData, setFormData] = useState({
     name: "",
     mobile: "",
+    address: "",
     plan: "Monthly",
     feeAmount: 1000,
     seatNumber: "",
@@ -111,8 +112,11 @@ const Students = () => {
     const basePayDate = payDate ? new Date(payDate) : new Date();
     let startDate = basePayDate;
     
-    // Check if we are covering the backlog or starting fresh
-    if (allocationMode === "backlog") {
+    // Check if student has paid any fee before
+    if (!studentObj.hasPaidFee) {
+      // First payment ever for this student! Start from joiningDate
+      startDate = studentObj.joiningDate ? new Date(studentObj.joiningDate) : basePayDate;
+    } else if (allocationMode === "backlog") {
       if (studentObj.expiryDate) {
         startDate = new Date(studentObj.expiryDate);
       } else if (studentObj.joiningDate) {
@@ -177,6 +181,7 @@ const Students = () => {
       const data = new FormData();
       data.append("name", formData.name);
       data.append("mobile", formData.mobile);
+      data.append("address", formData.address || "");
       data.append("plan", formData.plan);
       data.append("feeAmount", formData.feeAmount);
       data.append("seatNumber", formData.seatNumber);
@@ -214,6 +219,7 @@ const Students = () => {
       const data = new FormData();
       data.append("name", formData.name);
       data.append("mobile", formData.mobile);
+      data.append("address", formData.address || "");
       data.append("plan", formData.plan);
       data.append("feeAmount", formData.feeAmount);
       data.append("seatNumber", formData.seatNumber);
@@ -297,6 +303,7 @@ const Students = () => {
     setFormData({
       name: student.name,
       mobile: student.mobile,
+      address: student.address || "",
       plan: student.plan,
       feeAmount: student.feeAmount,
       seatNumber: student.seatNumber || "",
@@ -330,6 +337,7 @@ const Students = () => {
     setFormData({
       name: "",
       mobile: "",
+      address: "",
       plan: "Monthly",
       feeAmount: 1000,
       seatNumber: "",
@@ -345,7 +353,8 @@ const Students = () => {
   const filteredStudents = students.filter((s) => {
     const matchesSearch =
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.mobile.includes(searchTerm);
+      s.mobile.includes(searchTerm) ||
+      (s.address && s.address.toLowerCase().includes(searchTerm.toLowerCase()));
 
     let matchesStatus = true;
     if (statusFilter === "Active") {
@@ -451,7 +460,13 @@ const Students = () => {
                       <tr key={student._id} className="hover:bg-slate-800/20 transition-all duration-150">
                         <td className="py-4 px-4 font-bold text-slate-200">{student.name}</td>
                         <td className="py-4 px-4 text-xs text-slate-400">
-                          <div>💬 WhatsApp: {student.mobile}</div>
+                          <div>💬 {student.mobile}</div>
+                          {student.address && (
+                            <div className="text-[11px] text-slate-400 mt-0.5 flex items-start gap-1">
+                              <span>📍</span>
+                              <span className="truncate max-w-[180px]" title={student.address}>{student.address}</span>
+                            </div>
+                          )}
                           {student.aadharCard && (
                             <div className="mt-1">
                               <a
@@ -468,20 +483,27 @@ const Students = () => {
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-1.5">
                             <span className="font-semibold text-slate-300">{student.plan}</span>
-                            {student.status === "Active" && student.isDue && (
-                              <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded border uppercase animate-pulse ${
-                                student.isExpired
-                                  ? "bg-red-500/10 border-red-500/20 text-red-400"
-                                  : "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                              }`}>
-                                {student.isExpired ? "Expired" : "Due"}
-                              </span>
+                            {student.status === "Active" && (
+                              student.isDue ? (
+                                <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded border uppercase animate-pulse ${
+                                  student.isExpired
+                                    ? "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                                    : "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                                }`}>
+                                  {student.isExpired ? "🚨 Expired" : "⚠️ Fee Due"}
+                                </span>
+                              ) : (
+                                <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded border uppercase bg-emerald-500/10 border-emerald-500/20 text-emerald-400">
+                                  ✓ Paid
+                                </span>
+                              )
                             )}
                           </div>
                           <div className="text-xs text-slate-500">₹{student.feeAmount.toLocaleString()}</div>
                           {student.expiryDate && student.status === "Active" && (
-                            <div className="text-[10px] text-slate-500 mt-0.5">
-                              Exp: {new Date(student.expiryDate).toLocaleDateString("en-IN", {
+                            <div className={`text-[10px] mt-0.5 ${!student.isDue ? "text-emerald-400/80 font-medium" : "text-slate-500"}`}>
+                              {!student.isDue ? "Valid till: " : "Due: "} 
+                              {new Date(student.expiryDate).toLocaleDateString("en-IN", {
                                 year: "numeric",
                                 month: "short",
                                 day: "numeric"
@@ -522,7 +544,11 @@ const Students = () => {
                         <td className="py-4 px-4 text-right space-x-2">
                           <button
                             onClick={() => openPaymentModal(student)}
-                            className="bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 text-xs px-2.5 py-1.5 rounded-md cursor-pointer transition-colors"
+                            className={`text-xs px-2.5 py-1.5 rounded-md cursor-pointer transition-all ${
+                              student.isDue
+                                ? "bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-md shadow-emerald-600/20"
+                                : "bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20"
+                            }`}
                             title="Record Payment"
                           >
                             💵 Pay
@@ -582,6 +608,17 @@ const Students = () => {
                     className="w-full bg-slate-950/65 border border-slate-850 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Student Location / Address</label>
+                <input
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
+                  placeholder="e.g. House No. 42, Green Park, New Delhi"
+                  className="w-full bg-slate-950/65 border border-slate-850 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
+                />
               </div>
 
               <div>

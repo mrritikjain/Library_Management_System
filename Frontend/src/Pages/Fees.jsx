@@ -90,8 +90,11 @@ const Fees = () => {
     const basePayDate = payDate ? new Date(payDate) : new Date();
     let startDate = basePayDate;
     
-    // Check if we are covering the backlog or starting fresh
-    if (allocationMode === "backlog") {
+    // Check if student has paid any fee before
+    if (!studentObj.hasPaidFee) {
+      // First payment ever for this student! Start from joiningDate
+      startDate = studentObj.joiningDate ? new Date(studentObj.joiningDate) : basePayDate;
+    } else if (allocationMode === "backlog") {
       if (studentObj.expiryDate) {
         startDate = new Date(studentObj.expiryDate);
       } else if (studentObj.joiningDate) {

@@ -24,7 +24,7 @@ const releaseStudentSeat = async (studentId, createdBy) => {
 
 export const createStudent = async (req, res) => {
   try {
-    const { name, mobile, plan, feeAmount, seatNumber, slot, joiningDate } = req.body;
+    const { name, mobile, address, plan, feeAmount, seatNumber, slot, joiningDate } = req.body;
     const createdBy = req.userID;
 
     // Validate inputs
@@ -70,6 +70,7 @@ export const createStudent = async (req, res) => {
     const student = new Student({
       name: name.trim(),
       mobile: mobile.trim(),
+      address: address ? address.trim() : undefined,
       plan,
       feeAmount: Number(feeAmount),
       seatNumber: assignedSeat,
@@ -161,6 +162,7 @@ export const getStudents = async (req, res) => {
         isDue = new Date() >= expiryDate;
       }
       
+      sObj.hasPaidFee = studentFees.length > 0;
       sObj.isDue = isDue;
       sObj.isExpired = isExpired;
       sObj.expiryDate = expiryDate;
@@ -177,7 +179,7 @@ export const getStudents = async (req, res) => {
 export const updateStudent = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, mobile, plan, feeAmount, seatNumber, slot, status, joiningDate } = req.body;
+    const { name, mobile, address, plan, feeAmount, seatNumber, slot, status, joiningDate } = req.body;
     const createdBy = req.userID;
 
     const student = await Student.findOne({ _id: id, createdBy });
@@ -239,6 +241,7 @@ export const updateStudent = async (req, res) => {
     // Update Student
     student.name = name !== undefined ? name.trim() : student.name;
     student.mobile = mobile !== undefined ? mobile.trim() : student.mobile;
+    student.address = address !== undefined ? address.trim() : student.address;
     student.plan = plan !== undefined ? plan : student.plan;
     student.feeAmount = feeAmount !== undefined ? Number(feeAmount) : student.feeAmount;
     student.seatNumber = assignedSeat;

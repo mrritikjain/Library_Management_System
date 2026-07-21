@@ -13,6 +13,10 @@ const StudentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  address: {
+    type: String,
+    trim: true,
+  },
   joiningDate: {
     type: Date,
     default: Date.now,
